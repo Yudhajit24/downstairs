@@ -23,6 +23,7 @@ const { default: patchH } = await import('../orders/[id].js')
 const { default: sessionH } = await import('../kitchen/session.js')
 const { default: actionH } = await import('../kitchen/action.js')
 const { default: templatesH } = await import('../templates/index.js')
+const { default: weatherH, resetWeatherCache } = await import('../weather/index.js')
 
 function call(h: (q: VercelRequest, r: VercelResponse) => Promise<void>, opts: { method?: string; body?: unknown; query?: object; auth?: string }) {
   const out = { code: 0, body: undefined as any }
@@ -162,5 +163,37 @@ describe('POST /api/templates', () => {
     expect((await call(templatesH, { body: { items: [] } })).code).toBe(400)
     expect((await call(templatesH, { body: { items: [{ itemId: 'ghost', qty: 1 }] } })).code).toBe(409)
     expect((await call(templatesH, { method: 'GET' })).code).toBe(405)
+  })
+})
+
+describe('GET /api/weather', () => {
+  const ok = { current: { temperature_2m: 27.4, precipitation: 0.6, weather_code: 61 } }
+  it('returns the current weather and caches it', async () => {
+    resetWeatherCache()
+    const f = vi.fn(async () => new Response(JSON.stringify(ok)))
+    vi.stubGlobal('fetch', f)
+    const a = await call(weatherH, { method: 'GET' })
+    expect(a.code).toBe(200)
+    expect(a.body.weather).toEqual({ tempC: 27.4, precipMm: 0.6, code: 61 })
+    await call(weatherH, { method: 'GET' })
+    expect(f).toHaveBeenCalledTimes(1) // second call served from the cache
+    vi.unstubAllGlobals()
+  })
+  it('degrades to { weather: null } when the upstream fails', async () => {
+    resetWeatherCache()
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network') }))
+    const r = await call(weatherH, { method: 'GET' })
+    expect(r.code).toBe(200)
+    expect(r.body.weather).toBeNull()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 503 })))
+    expect((await call(weatherH, { method: 'GET' })).body.weather).toBeNull()
+    vi.unstubAllGlobals()
+  })
+  it('kitchen can set and clear the banner', async () => {
+    await call(actionH, { auth: 'Bearer staff-token', body: { type: 'setSettings', banner: '  Live music at 7  ' } })
+    expect((db.read('settings/cafe') as any).banner).toBe('Live music at 7')
+    await call(actionH, { auth: 'Bearer staff-token', body: { type: 'setSettings', banner: '' } })
+    expect((db.read('settings/cafe') as any).banner).toBeNull()
+    expect((await call(actionH, { auth: 'Bearer staff-token', body: { type: 'setSettings', banner: 'x'.repeat(81) } })).code).toBe(400)
   })
 })

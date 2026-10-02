@@ -42,7 +42,7 @@ export type KitchenActionBody =
   | { type: 'ackChanges'; orderId: string }
   | { type: 'setItem'; itemId: string; available?: boolean; stock?: number | null }
   | { type: 'setSlot'; slotId: string; closed: boolean }
-  | { type: 'setSettings'; paused?: boolean; forceOpen?: boolean }
+  | { type: 'setSettings'; paused?: boolean; forceOpen?: boolean; banner?: string | null }
 
 export const api = {
   createTemplate: (items: OrderBody['items']) => request<{ id: string }>('POST', '/api/templates', { items }),

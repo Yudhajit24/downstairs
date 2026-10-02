@@ -12,6 +12,9 @@ import { useNow } from '../lib/hooks'
 import { rupees, SUGAR_TEXT } from '../lib/format'
 import { loadProfile } from '../lib/storage'
 import { Poster, posterOfDay } from '../posters/Poster'
+import { kitchenLoad, weatherBanner } from '../../shared/suggest'
+import { useWeather } from '../lib/weather'
+import { RightNow } from './RightNow'
 import { isSoldOut, remainingFor, useCart } from './CartContext'
 import { ItemRow } from './ItemRow'
 import { ItemSheet } from './ItemSheet'
@@ -23,7 +26,7 @@ const CATS: { id: Category; label: string }[] = [
 ]
 
 export function MenuPage() {
-  const { menu, menuList, settings, ready, error } = useCafe()
+  const { menu, menuList, settings, slots, ready, error } = useCafe()
   const cart = useCart()
   const nav = useNavigate()
   const now = useNow(30_000)
@@ -49,8 +52,12 @@ export function MenuPage() {
   const day = dateKey(now)
   const poster = useMemo(() => posterOfDay(new Date()), [day]) // eslint-disable-line react-hooks/exhaustive-deps
   const hello = useMemo(() => greeting(now, loadProfile()?.name), [now.getHours()]) // eslint-disable-line react-hooks/exhaustive-deps
-  // A weather promo (spec section 15) will set this and hide the strip so items stay above the fold.
-  const promoShowing = false
+  // A promo (the kitchen's own banner, else notable weather) hides the poster strip so items stay above the fold.
+  const weather = useWeather()
+  const promoText = settings?.banner || (weather ? weatherBanner(weather) : null)
+  // Rush hour: when the next slots are filling up, drop decoration so items stay above the fold.
+  const busy = useMemo(() => (settings ? kitchenLoad({ settings, slots, now }).busy : false), [settings, slots, Math.floor(now.getTime() / 60_000)]) // eslint-disable-line react-hooks/exhaustive-deps
+  const promoShowing = !!promoText || busy
   const blocked = settings ? (!open ? COPY.closed(formatTime12(nextOpen(settings).opensAt)) : settings.paused ? COPY.paused : null) : null
 
   const totals = useMemo(() => buildLines(cart.state.lines, menu), [cart.state.lines, menu])
@@ -90,7 +97,7 @@ export function MenuPage() {
         <p className="m-0 mt-3 font-display text-[20px] leading-6 text-ink">{hello}</p>
       </header>
 
-      <PromoBanner />
+      <PromoBanner text={promoText} />
 
       <div className="flex flex-col gap-3 px-4">
         {!open && <Poster poster={poster} variant="full" />}
@@ -104,6 +111,7 @@ export function MenuPage() {
         )}
         {error && <Notice tone="tomato" role="alert">Can't reach the café right now. Showing what we have.</Notice>}
         <UsualCard />
+        {open && <RightNow now={now} weather={weather} busy={busy} />}
       </div>
 
       <div className="sticky top-0 z-30 mt-4 border-y-2 border-ink bg-paper px-4 py-2">

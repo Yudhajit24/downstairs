@@ -55,8 +55,15 @@ export function TopBar({ title, onBack }: { title: string; onBack?: () => void }
   )
 }
 
-/** Reserved for weather-driven promos (spec section 15). Renders nothing for now. */
-export function PromoBanner() { return null }
+/** Kitchen-written note or a notable-weather line (spec section 15). Renders nothing when there's no text. */
+export function PromoBanner({ text }: { text: string | null }) {
+  if (!text) return null
+  return (
+    <div role="status" className="mx-4 mb-1 rounded-btn border-2 border-ink-deep bg-ink px-4 py-3 text-body font-bold text-paper-raised shadow-hard">
+      {text}
+    </div>
+  )
+}
 
 export function Spinner({ className }: { className?: string }) {
   return (

@@ -61,3 +61,9 @@
 - **Templates store lines only** (no name, flat, slot or note), so sharing leaks no personal data; opening one skips items that are sold out right now and says so. Availability is deliberately not checked at creation: a sold-out item may be back when the link is opened.
 - **Share lives on the status page (any non-cancelled order) and on checkout ("group order?").** The sheet offers native share where supported, WhatsApp and copy.
 - **Rules:** `templates` allows get by id, denies list and writes. `npm run reset-demo` now also clears templates.
+- **Weather comes from Open-Meteo through `GET /api/weather` (6th function).** No key needed. A 10 minute in-memory cache plus `s-maxage=600` keeps us far inside its free limits; any upstream failure returns `{ weather: null }` and the app silently drops weather-based picks. Coordinates are a constant (`CAFE_COORDS`).
+- **"Right now" is a pure, tested function (`shared/suggest.ts`).** It ranks by weather (rain/cool lift hot drinks, heat lifts cold), IST time of day, and kitchen load; never suggests sold-out items; max 2 per category, 3 picks.
+- **Kitchen load replaces the maps/congestion idea.** The load is the mean fill of the next three bookable slots (from live slot docs); at >= 60% the row becomes "Kitchen's busy. Grab and go:" and 0-prep-unit bakes rank first. No external API, and it reflects the thing a customer actually waits on.
+- **Poster strip hides when a promo shows or the kitchen is busy.** The spec only said "promo banner"; extending it to rush hour keeps the first item above the fold when it matters. When calm, the poster returns.
+- **The banner is hand-written by the kitchen (Slots drawer, max 80 chars) and wins over the weather line.** It stands in for the "events" idea without a news API or location data.
+- **`settings.banner` is optional** so existing documents don't need a migration; an empty string clears it.

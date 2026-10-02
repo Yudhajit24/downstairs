@@ -3,6 +3,8 @@ export const CAFE_WORDMARK = CAFE_NAME.toLowerCase()
 export const CAFE_TAGLINE = 'your café, one lift ride away'
 export const CAFE_LOCATION = 'Palm Grove Residency · Clubhouse, ground floor'
 export const TIMEZONE = 'Asia/Kolkata'
+/** Palm Grove Residency, Bengaluru (used for the weather lookup). */
+export const CAFE_COORDS = { lat: 12.9716, lon: 77.5946 } as const
 
 export const COPY = {
   closed: (opensAt: string) => `We're closed. Back at ${opensAt}.`,
@@ -25,4 +27,5 @@ export const DEFAULT_SETTINGS = {
   maxItemsPerOrder: 15,
   paused: false,
   forceOpen: true,
+  banner: null,
 } as const

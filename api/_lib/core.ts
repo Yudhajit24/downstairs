@@ -277,6 +277,7 @@ export async function kitchenAction(db: Db, a: KitchenAction, now: Date): Promis
         const patch: Partial<CafeSettings> = {}
         if (a.paused !== undefined) patch.paused = a.paused
         if (a.forceOpen !== undefined) patch.forceOpen = a.forceOpen
+        if (a.banner !== undefined) patch.banner = a.banner ? a.banner : null // empty clears it
         if (Object.keys(patch).length) tx.update('settings/cafe', patch)
         return { noop: false }
       }

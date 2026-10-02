@@ -60,6 +60,26 @@ export function StockDrawer({ open, onClose, disabled }: { open: boolean; onClos
   )
 }
 
+function BannerEditor({ disabled }: { disabled: boolean }) {
+  const { settings } = useCafe()
+  const run = useRun()
+  const [text, setText] = useState(settings?.banner ?? '')
+  return (
+    <div className="mb-4 rounded-card border-2 border-ink bg-paper-raised p-3">
+      <label htmlFor="banner" className="block text-body font-bold">Today's banner</label>
+      <p className="m-0 mb-2 text-small text-ink-deep/80">Shown on the customer menu (a special, an event). Leave empty for none.</p>
+      <input
+        id="banner" value={text} maxLength={80} onChange={(e) => setText(e.target.value)} placeholder="e.g. Live music at the clubhouse, 7 PM"
+        className="h-14 w-full rounded-btn border-2 border-ink bg-paper px-4 text-body text-ink-deep placeholder:text-fog"
+      />
+      <div className="mt-2 flex gap-2">
+        <button type="button" disabled={disabled} className="min-h-14 flex-1 rounded-btn border-2 border-ink bg-ink font-bold text-paper-raised cursor-pointer disabled:opacity-50" onClick={() => run({ type: 'setSettings', banner: text.trim() || null })}>Save banner</button>
+        <button type="button" disabled={disabled || !settings?.banner} className="min-h-14 rounded-btn border-2 border-ink bg-paper px-4 font-bold text-ink cursor-pointer disabled:opacity-50" onClick={() => { setText(''); void run({ type: 'setSettings', banner: null }) }}>Clear</button>
+      </div>
+    </div>
+  )
+}
+
 export function SlotsDrawer({ open, onClose, disabled, now }: { open: boolean; onClose: () => void; disabled: boolean; now: Date }) {
   const { settings, slots } = useCafe()
   const run = useRun()
@@ -78,6 +98,7 @@ export function SlotsDrawer({ open, onClose, disabled, now }: { open: boolean; o
   if (!settings) return null
   return (
     <Drawer open={open} onClose={onClose} title="Slots">
+      <BannerEditor disabled={disabled} />
       <div className="mb-4 flex items-center justify-between gap-3 rounded-card border-2 border-ink bg-paper-raised p-3">
         <div>
           <p className="m-0 text-body font-bold">Open 24 hours (demo)</p>

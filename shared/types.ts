@@ -29,6 +29,8 @@ export interface CafeSettings {
   maxItemsPerOrder: number
   paused: boolean
   forceOpen: boolean
+  /** Hand-written note from the kitchen (today's special, an event). Shown on the menu. */
+  banner?: string | null
 }
 
 export interface SlotDoc {

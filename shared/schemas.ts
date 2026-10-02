@@ -70,7 +70,12 @@ export const kitchenActionSchema = z.discriminatedUnion('type', [
     stock: z.number().int().min(0).max(9999).nullable().optional(),
   }),
   z.object({ type: z.literal('setSlot'), slotId: slotIdSchema, closed: z.boolean() }),
-  z.object({ type: z.literal('setSettings'), paused: z.boolean().optional(), forceOpen: z.boolean().optional() }),
+  z.object({
+    type: z.literal('setSettings'),
+    paused: z.boolean().optional(),
+    forceOpen: z.boolean().optional(),
+    banner: z.string().trim().max(80).nullable().optional(),
+  }),
 ])
 export type KitchenAction = z.infer<typeof kitchenActionSchema>
 
