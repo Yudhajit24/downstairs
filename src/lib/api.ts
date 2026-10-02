@@ -44,7 +44,10 @@ export type KitchenActionBody =
   | { type: 'setSlot'; slotId: string; closed: boolean }
   | { type: 'setSettings'; paused?: boolean; forceOpen?: boolean; banner?: string | null }
 
+export interface AssistResponse { source: 'ai' | 'rules'; picks: { itemId: string; reason: string }[]; note?: string }
+
 export const api = {
+  assist: (query: string) => request<AssistResponse>('POST', '/api/assist', { query }),
   createTemplate: (items: OrderBody['items']) => request<{ id: string }>('POST', '/api/templates', { items }),
   kitchenSession: (pin: string) => request<{ token: string }>('POST', '/api/kitchen/session', { pin }),
   kitchenAction: (idToken: string, action: KitchenActionBody) =>

@@ -5,6 +5,10 @@ Order-ahead web app for a small café inside a residential society (Palm Grove R
 - **Customer view** (mobile-first): menu, cart, sugar options, pickup slots with capacity, place order, live status, edit/cancel while New, recent orders, reorder.
 - **Kitchen view** (`/kitchen`, tablet landscape): PIN gate, live KOT board, status changes with undo, cancel with reason, stock and slot controls, pause new orders, chime, wake lock.
 - **Poster of the day:** a daily riso-duotone art card (public-domain busts with pop accessories).
+- **Shareable order templates:** share any cart or order as a `/t/<id>` link that drops the same items into a friend's cart.
+- **"Right now" suggestions:** picks from the weather (Open-Meteo), the time of day and how full the next pickup slots are. When the kitchen is busy it leads with grab-and-go bakes.
+- **Fit picks:** a healthier section (light and high-protein) with approximate nutrition and filters.
+- **Ask for a pick (AI):** free-text suggestions, answered by an open-source LLM when configured and by a rule engine otherwise.
 
 ## Live
 
@@ -33,6 +37,20 @@ Open `/styleguide` for every design primitive and illustration.
 | `VITE_FIREBASE_*` | client | **Public by design.** The Firebase web config identifies the project; it is not a secret. Security comes from Firestore rules and server-side writes. |
 | `FIREBASE_SERVICE_ACCOUNT_BASE64` | server only | base64 of the service-account JSON. Never `VITE_`-prefixed. |
 | `KITCHEN_PIN` | server only | 4–6 digits. Compared in constant time; wrong guesses are delayed. |
+
+### AI picks: connect an open-source LLM (optional)
+
+`POST /api/assist` works with **no configuration** (a tested rule engine answers). To use a model, set three server-only env vars for any **OpenAI-compatible** chat-completions endpoint:
+
+| Variable | Example |
+|---|---|
+| `LLM_BASE_URL` | `https://api.groq.com/openai/v1`, `https://api.together.xyz/v1`, `https://openrouter.ai/api/v1`, or `http://localhost:11434/v1` (Ollama) |
+| `LLM_MODEL` | `llama-3.1-8b-instant` (Groq), `meta-llama/Llama-3.1-8B-Instruct-Turbo` (Together), `llama3.1:8b` (Ollama) |
+| `LLM_API_KEY` | the provider's key (not needed for a local Ollama) |
+
+The model's answer is treated as untrusted: only ids of items that are in stock and satisfy the budget and veg constraints in the request survive; reasons are sanitised; any error, timeout or bad JSON falls back to the rules. Requests are rate limited (6/min per IP) and cached for 5 minutes.
+
+**Deploying:** a Vercel function cannot reach `localhost`, so for production use a hosted provider (or a tunnel to your own Ollama). Add the three variables with `vercel env add`.
 
 ### Scripts
 

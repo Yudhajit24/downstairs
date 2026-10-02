@@ -15,6 +15,7 @@ import { Poster, posterOfDay } from '../posters/Poster'
 import { kitchenLoad, weatherBanner } from '../../shared/suggest'
 import { fitPicks, type FitFilter } from '../../shared/nutrition'
 import { useWeather } from '../lib/weather'
+import { AskPicks } from './AskPicks'
 import { RightNow } from './RightNow'
 import { isSoldOut, remainingFor, useCart } from './CartContext'
 import { ItemRow } from './ItemRow'
@@ -115,6 +116,7 @@ export function MenuPage() {
         {error && <Notice tone="tomato" role="alert">Can't reach the café right now. Showing what we have.</Notice>}
         <UsualCard />
         {open && <RightNow now={now} weather={weather} busy={busy} />}
+        {open && <AskPicks />}
       </div>
 
       <div className="sticky top-0 z-30 mt-4 border-y-2 border-ink bg-paper px-4 py-2">

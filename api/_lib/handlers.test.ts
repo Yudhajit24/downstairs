@@ -6,8 +6,17 @@ import { memoryDb } from './memory-db.js'
 
 // Swap the Firebase admin layer for an in-memory store + a fake auth.
 let db = memoryDb()
+// assist reads Firestore through the admin SDK directly (collection queries), so give it a tiny fake of that API.
+const fakeFs = () => ({
+  collection: (name: string) => ({
+    get: async () => ({ docs: [...(db.store as Map<string, object>).entries()].filter(([k]) => k.startsWith(`${name}/`)).map(([k, v]) => ({ id: k.slice(name.length + 1), data: () => v })) }),
+    where: () => ({ get: async () => ({ docs: [] }) }),
+  }),
+  doc: (path: string) => ({ get: async () => ({ exists: (db.store as Map<string, object>).has(path), data: () => (db.store as Map<string, object>).get(path) }) }),
+})
 vi.mock('./admin.js', () => ({
   firestoreDb: () => db,
+  adminFirestore: () => fakeFs(),
   adminAuth: () => ({
     createCustomToken: async (_uid: string, claims: object) => `custom:${JSON.stringify(claims)}`,
     verifyIdToken: async (t: string) => {
@@ -23,7 +32,9 @@ const { default: patchH } = await import('../orders/[id].js')
 const { default: sessionH } = await import('../kitchen/session.js')
 const { default: actionH } = await import('../kitchen/action.js')
 const { default: templatesH } = await import('../templates/index.js')
-const { default: weatherH, resetWeatherCache } = await import('../weather/index.js')
+const { default: weatherH } = await import('../weather/index.js')
+const { default: assistH } = await import('../assist/index.js')
+const { resetWeatherCache } = await import('./weather.js')
 
 function call(h: (q: VercelRequest, r: VercelResponse) => Promise<void>, opts: { method?: string; body?: unknown; query?: object; auth?: string }) {
   const out = { code: 0, body: undefined as any }
@@ -195,5 +206,22 @@ describe('GET /api/weather', () => {
     await call(actionH, { auth: 'Bearer staff-token', body: { type: 'setSettings', banner: '' } })
     expect((db.read('settings/cafe') as any).banner).toBeNull()
     expect((await call(actionH, { auth: 'Bearer staff-token', body: { type: 'setSettings', banner: 'x'.repeat(81) } })).code).toBe(400)
+  })
+})
+
+describe('POST /api/assist', () => {
+  it('answers with the rule-based engine when no LLM is configured', async () => {
+    delete process.env.LLM_BASE_URL
+    const r = await call(assistH, { body: { query: 'high protein under ₹150' } })
+    expect(r.code).toBe(200)
+    expect(r.body.source).toBe('rules')
+    expect(r.body.picks.length).toBeGreaterThan(0)
+    expect(r.body.picks[0]).toHaveProperty('itemId')
+    expect(r.body.picks[0]).toHaveProperty('reason')
+  })
+  it('400 on an empty or too long query, 405 on GET', async () => {
+    expect((await call(assistH, { body: { query: '   ' } })).code).toBe(400)
+    expect((await call(assistH, { body: { query: 'x'.repeat(141) } })).code).toBe(400)
+    expect((await call(assistH, { method: 'GET' })).code).toBe(405)
   })
 })

@@ -84,7 +84,7 @@ export type ErrorCode =
   | 'VALIDATION' | 'CLOSED' | 'PAUSED' | 'ITEM_UNAVAILABLE'
   | 'SLOT_FULL' | 'SLOT_PASSED' | 'SLOT_CLOSED'
   | 'ORDER_TOO_LARGE' | 'ORDER_LOCKED' | 'NOT_FOUND' | 'UNAUTHORIZED'
-  | 'METHOD_NOT_ALLOWED' | 'INTERNAL'
+  | 'METHOD_NOT_ALLOWED' | 'RATE_LIMITED' | 'INTERNAL'
 
 export interface ApiErrorBody {
   code: ErrorCode
