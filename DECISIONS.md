@@ -55,3 +55,9 @@
 - **The Firebase web API key is set as a public Vercel `config` variable.** Vercel warns about `VITE_*API_KEY`; it is public by design (embedded in every client bundle), unlike the service account and PIN, which are sensitive server-only variables.
 - **Handler tests live in `api/_lib/`**, because Vercel turns every file directly under `api/` into a serverless function. Exactly four functions are deployed.
 - **Kitchen and styleguide are lazy chunks, and Firebase Auth is initialised only in the kitchen code**, so customers never download them. The customer bundle is ~306 KB gzipped (mostly the Firestore SDK).
+
+## Round 2: feature additions (templates, weather, healthier, AI picks)
+- **Order templates are shareable carts at `/t/:id`.** `POST /api/templates` is the 5th function. The template id is the first 12 chars of a SHA-256 over the normalised, sorted lines (sugar defaulted/dropped per the menu, duplicates merged), so the same cart always yields the same link. That makes the endpoint idempotent and bounds spam from an unauthenticated endpoint to distinct carts. No rate limiter yet.
+- **Templates store lines only** (no name, flat, slot or note), so sharing leaks no personal data; opening one skips items that are sold out right now and says so. Availability is deliberately not checked at creation: a sold-out item may be back when the link is opened.
+- **Share lives on the status page (any non-cancelled order) and on checkout ("group order?").** The sheet offers native share where supported, WhatsApp and copy.
+- **Rules:** `templates` allows get by id, denies list and writes. `npm run reset-demo` now also clears templates.

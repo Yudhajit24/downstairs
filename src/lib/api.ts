@@ -45,6 +45,7 @@ export type KitchenActionBody =
   | { type: 'setSettings'; paused?: boolean; forceOpen?: boolean }
 
 export const api = {
+  createTemplate: (items: OrderBody['items']) => request<{ id: string }>('POST', '/api/templates', { items }),
   kitchenSession: (pin: string) => request<{ token: string }>('POST', '/api/kitchen/session', { pin }),
   kitchenAction: (idToken: string, action: KitchenActionBody) =>
     request<{ noop: boolean; order?: Order }>('POST', '/api/kitchen/action', action, idToken),

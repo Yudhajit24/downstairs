@@ -16,6 +16,7 @@ import { rupees, SUGAR_TEXT, time12 } from '../lib/format'
 import { loadProfile, saveProfile } from '../lib/storage'
 import { remainingFor, useCart, useEditCart, useNotices, useTotals, type CartApi } from './CartContext'
 import { useRecentOrders } from './RecentOrders'
+import { ShareButton } from './ShareButton'
 import { SlotPicker, stateOfSlot, type SlotCtx } from './SlotPicker'
 import { Dock, Notice, Spinner, TopBar } from './ui'
 
@@ -300,6 +301,10 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
               <Field id="flat" label="Flat" value={flat} onChange={(v) => setFlat(v.toUpperCase())} autoComplete="off" placeholder="e.g. B-402" error={err('flat')} />
             </div>
           </section>
+        )}
+
+        {!edit && problems.length === 0 && (
+          <ShareButton items={cart.state.lines.map((l) => ({ itemId: l.itemId, sugar: l.sugar, qty: l.qty }))} label="Share this cart (group order?)" />
         )}
 
         <section aria-labelledby="h-sum">

@@ -9,6 +9,10 @@ service cloud.firestore {
       allow list: if request.auth != null && request.auth.token.staff == true;
       allow write: if false;
     }
+    match /templates/{id} {
+      allow get: if true;    // shared carts are not private; ids are a hash of the items
+      allow list, write: if false;
+    }
     match /counters/{id} { allow read, write: if false; }
   }
 }

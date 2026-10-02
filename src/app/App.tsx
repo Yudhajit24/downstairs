@@ -7,6 +7,7 @@ import { CartProvider } from '../customer/CartContext'
 import { CheckoutPage } from '../customer/CheckoutPage'
 import { OrderPage } from '../customer/OrderPage'
 import { OrdersPage } from '../customer/OrdersPage'
+import { TemplatePage } from '../customer/TemplatePage'
 import { MenuPage } from '../customer/MenuPage'
 import { RecentOrdersProvider } from '../customer/RecentOrders'
 import { CafeDataProvider } from '../lib/CafeData'
@@ -77,6 +78,7 @@ export function App() {
             <Route path="/cart" element={<CheckoutPage />} />
             <Route path="/order/:id" element={<OrderPage />} />
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/t/:id" element={<TemplatePage />} />
             <Route path="*" element={<Placeholder name="customer" />} />
           </Route>
         </Routes>

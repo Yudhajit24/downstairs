@@ -22,6 +22,7 @@ const { default: createH } = await import('../orders/index.js')
 const { default: patchH } = await import('../orders/[id].js')
 const { default: sessionH } = await import('../kitchen/session.js')
 const { default: actionH } = await import('../kitchen/action.js')
+const { default: templatesH } = await import('../templates/index.js')
 
 function call(h: (q: VercelRequest, r: VercelResponse) => Promise<void>, opts: { method?: string; body?: unknown; query?: object; auth?: string }) {
   const out = { code: 0, body: undefined as any }
@@ -144,5 +145,22 @@ describe('kitchen endpoints', () => {
   })
   it('400 on a malformed action', async () => {
     expect((await call(actionH, { auth: 'Bearer staff-token', body: { type: 'explode' } })).code).toBe(400)
+  })
+})
+
+describe('POST /api/templates', () => {
+  it('creates (201) then returns the same id for the same cart (200)', async () => {
+    const body = { items: [{ itemId: 'cutting-chai', qty: 2, sugar: 'less' }] }
+    const a = await call(templatesH, { body })
+    expect(a.code).toBe(201)
+    expect(a.body.id).toMatch(/^[A-Za-z0-9_-]{12}$/)
+    const b = await call(templatesH, { body })
+    expect(b.code).toBe(200)
+    expect(b.body.id).toBe(a.body.id)
+  })
+  it('400 on an empty cart, 409 on an unknown item, 405 on GET', async () => {
+    expect((await call(templatesH, { body: { items: [] } })).code).toBe(400)
+    expect((await call(templatesH, { body: { items: [{ itemId: 'ghost', qty: 1 }] } })).code).toBe(409)
+    expect((await call(templatesH, { method: 'GET' })).code).toBe(405)
   })
 })
