@@ -52,9 +52,14 @@ export function KitchenTicket({ order, now, flash, pending, disabled, onAdvance,
       }
     >
       {order.items.map((l) => (
-        <div key={`${l.itemId}${l.sugar}`} className="flex flex-wrap items-baseline justify-between gap-x-3">
-          <span>{String(l.qty).padEnd(2, ' ')}&nbsp;{l.name}</span>
-          {l.sugar && l.sugar !== 'regular' && <span className="ml-auto text-[16px]">{SUGAR_TEXT[l.sugar]}</span>}
+        <div key={`${l.itemId}${l.sugar}${(l.custom ?? []).map((c) => c.choices.join()).join('|')}`}>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <span>{String(l.qty).padEnd(2, '\u00a0')}&nbsp;{l.name}</span>
+            {l.sugar && l.sugar !== 'regular' && <span className="ml-auto text-[16px]">{SUGAR_TEXT[l.sugar]}</span>}
+          </div>
+          {l.custom?.map((c) => (
+            <div key={c.group} className="pl-6 text-[16px] leading-5"><span className="opacity-70">{c.group}:</span> <span className="font-bold">{c.choices.join(', ')}</span></div>
+          ))}
         </div>
       ))}
       {order.note && <div className="mt-1 text-[16px]">note: {order.note}</div>}

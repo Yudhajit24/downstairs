@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
-import { buildLines, qtyByItem } from '../../shared/pricing'
-import type { Order, Sugar } from '../../shared/types'
+import { buildLines, lineKey, qtyByItem } from '../../shared/pricing'
+import type { Order, Selections, Sugar } from '../../shared/types'
 import { useCafe, type MenuEntry } from '../lib/CafeData'
 import { loadCart, saveCart } from '../lib/storage'
 
-export interface CartLine { itemId: string; sugar: Sugar | null; qty: number }
+export interface CartLine { itemId: string; sugar: Sugar | null; qty: number; /** Build-your-own picks (group id -> choice ids). */ options?: Selections }
 export interface CartState { lines: CartLine[]; note: string; slotId: string | null }
 interface EditState extends CartState { orderId: string; held: Record<string, number> }
 
@@ -17,8 +17,9 @@ interface Root {
 
 type Target = 'main' | 'edit'
 type Action =
-  | { t: 'add'; target: Target; itemId: string; sugar: Sugar | null; qty: number; max?: number }
-  | { t: 'setQty'; target: Target; itemId: string; sugar: Sugar | null; qty: number }
+  | { t: 'add'; target: Target; itemId: string; sugar: Sugar | null; qty: number; max?: number; options?: Selections }
+  | { t: 'setQty'; target: Target; itemId: string; sugar: Sugar | null; qty: number; options?: Selections }
+  | { t: 'fixOption'; target: Target; itemId: string; sugar: Sugar | null; options?: Selections; groupId: string; choiceId: string }
   | { t: 'note'; target: Target; note: string }
   | { t: 'slot'; target: Target; slotId: string | null }
   | { t: 'replace'; target: Target; lines: CartLine[] }
@@ -27,7 +28,7 @@ type Action =
   | { t: 'clamp'; lines: CartLine[]; target: Target; notices: Record<string, string> }
   | { t: 'dismiss'; itemId: string }
 
-const key = (l: { itemId: string; sugar: Sugar | null }) => `${l.itemId}|${l.sugar ?? ''}`
+const key = lineKey
 const EMPTY: CartState = { lines: [], note: '', slotId: null }
 
 function updateCart(root: Root, target: Target, f: (c: CartState) => CartState): Root {
@@ -43,7 +44,7 @@ function reducer(root: Root, a: Action): Root {
         const i = c.lines.findIndex((l) => key(l) === key(a))
         const lines = [...c.lines]
         if (i >= 0) lines[i] = { ...lines[i], qty: Math.min(lines[i].qty + a.qty, a.max ?? 99) }
-        else lines.push({ itemId: a.itemId, sugar: a.sugar, qty: Math.min(a.qty, a.max ?? 99) })
+        else lines.push({ itemId: a.itemId, sugar: a.sugar, qty: Math.min(a.qty, a.max ?? 99), ...(a.options && Object.keys(a.options).length > 0 && { options: a.options }) })
         return { ...c, lines }
       })
     case 'setQty': {
@@ -55,6 +56,25 @@ function reducer(root: Root, a: Action): Root {
       }))
       const { [a.itemId]: _gone, ...notices } = next.notices
       return { ...next, notices }
+    }
+    case 'fixOption': {
+      // Drop one ingredient from a line (the kitchen switched it off). Merge into an identical line if one exists.
+      return updateCart(root, a.target, (c) => {
+        const i = c.lines.findIndex((l) => key(l) === key(a))
+        if (i < 0) return c
+        const old = c.lines[i]
+        const options: Selections = {}
+        for (const [g, ids] of Object.entries(old.options ?? {})) {
+          const kept = g === a.groupId ? ids.filter((x) => x !== a.choiceId) : ids
+          if (kept.length) options[g] = kept
+        }
+        const fixed: CartLine = { ...old, options: Object.keys(options).length ? options : undefined }
+        const twin = c.lines.findIndex((l, j) => j !== i && key(l) === key(fixed))
+        const lines = [...c.lines]
+        if (twin >= 0) { lines[twin] = { ...lines[twin], qty: lines[twin].qty + old.qty }; lines.splice(i, 1) }
+        else lines[i] = fixed
+        return { ...c, lines }
+      })
     }
     case 'note': return updateCart(root, a.target, (c) => ({ ...c, note: a.note }))
     case 'slot': return updateCart(root, a.target, (c) => ({ ...c, slotId: a.slotId }))
@@ -68,7 +88,7 @@ function reducer(root: Root, a: Action): Root {
         ...root,
         edit: {
           orderId: o.id, slotId: o.slotId, note: o.note ?? '',
-          lines: o.items.map((i) => ({ itemId: i.itemId, sugar: i.sugar, qty: i.qty })),
+          lines: o.items.map((i) => ({ itemId: i.itemId, sugar: i.sugar, qty: i.qty, ...(i.options && { options: i.options }) })),
           held: Object.fromEntries(qtyByItem(o.items)),
         },
       }
@@ -85,7 +105,7 @@ function reducer(root: Root, a: Action): Root {
 function init(): Root {
   const s = loadCart()
   return {
-    main: s ? { lines: s.lines.map((l) => ({ ...l, sugar: l.sugar as Sugar | null })), note: s.note, slotId: s.slotId } : EMPTY,
+    main: s ? { lines: s.lines.map((l) => ({ ...l, sugar: l.sugar as Sugar | null })), note: s.note, slotId: s.slotId } : EMPTY, // options (if any) pass straight through
     edit: null,
     notices: {},
   }
@@ -94,10 +114,12 @@ function init(): Root {
 export interface CartApi {
   state: CartState
   held: Record<string, number>
-  qtyOf: (itemId: string, sugar: Sugar | null) => number
+  qtyOf: (itemId: string, sugar: Sugar | null, options?: Selections) => number
   totalQtyOf: (itemId: string) => number
-  add: (itemId: string, sugar: Sugar | null, qty?: number, max?: number) => void
-  setQty: (itemId: string, sugar: Sugar | null, qty: number) => void
+  add: (itemId: string, sugar: Sugar | null, qty?: number, max?: number, options?: Selections) => void
+  setQty: (itemId: string, sugar: Sugar | null, qty: number, options?: Selections) => void
+  /** Remove one ingredient from a line (used when it has been switched off). */
+  fixOption: (line: CartLine, groupId: string, choiceId: string) => void
   setNote: (n: string) => void
   setSlot: (id: string | null) => void
   replace: (lines: CartLine[]) => void
@@ -159,10 +181,11 @@ function makeApi(root: Root, dispatch: (a: Action) => void, target: Target): Car
   const held = target === 'edit' ? root.edit?.held ?? {} : {}
   return {
     state, held,
-    qtyOf: (itemId, sugar) => state.lines.find((l) => key(l) === key({ itemId, sugar }))?.qty ?? 0,
+    qtyOf: (itemId, sugar, options) => state.lines.find((l) => key(l) === key({ itemId, sugar, options }))?.qty ?? 0,
     totalQtyOf: (itemId) => state.lines.filter((l) => l.itemId === itemId).reduce((n, l) => n + l.qty, 0),
-    add: (itemId, sugar, qty = 1, max) => dispatch({ t: 'add', target, itemId, sugar, qty, max }),
-    setQty: (itemId, sugar, qty) => dispatch({ t: 'setQty', target, itemId, sugar, qty }),
+    add: (itemId, sugar, qty = 1, max, options) => dispatch({ t: 'add', target, itemId, sugar, qty, max, options }),
+    setQty: (itemId, sugar, qty, options) => dispatch({ t: 'setQty', target, itemId, sugar, qty, options }),
+    fixOption: (line, groupId, choiceId) => dispatch({ t: 'fixOption', target, itemId: line.itemId, sugar: line.sugar, options: line.options, groupId, choiceId }),
     setNote: (note) => dispatch({ t: 'note', target, note }),
     setSlot: (slotId) => dispatch({ t: 'slot', target, slotId }),
     replace: (lines) => dispatch({ t: 'replace', target, lines }),

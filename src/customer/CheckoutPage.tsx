@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { COPY } from '../../shared/constants'
-import { findItemProblems, qtyByItem } from '../../shared/pricing'
+import { findItemProblems, lineKey, qtyByItem, resolveOptions } from '../../shared/pricing'
 import { flatSchema, nameSchema } from '../../shared/schemas'
 import { formatTime12, isBookable, isCafeOpen, nextBookableSlots, nextOpen, parseSlotId } from '../../shared/slots'
 import type { ItemProblem, Order, SlotSuggestion } from '../../shared/types'
@@ -85,6 +85,13 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
     [cart.state.lines, menu, held],
   )
   const problemOf = (itemId: string) => problems.find((p) => p.itemId === itemId)
+  // Build-your-own lines: validate picks against the live menu. An edited order may keep an ingredient it already holds.
+  const heldKeys = useMemo(() => new Set((edit?.items ?? []).map(lineKey)), [edit])
+  const resolveLine = (l: (typeof cart.state.lines)[number]) => {
+    const item = menu[l.itemId]
+    return item?.options?.length ? resolveOptions(item, l.options, heldKeys.has(lineKey(l))) : null
+  }
+  const optionIssues = cart.state.lines.filter((l) => { const r = resolveLine(l); return r && !r.ok }).length
 
   const slotCtx: SlotCtx | null = settings
     ? { settings, slots, now, units: totals.units, own: edit ? { slotId: edit.slotId, units: edit.units } : undefined }
@@ -118,7 +125,7 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
   const tooLarge = settings && (totals.units > settings.maxUnitsPerOrder || totals.itemCount > settings.maxItemsPerOrder)
   const slotOk = !!slotId && !!slotCtx && isBookable(stateOfSlot(slotId, slotCtx))
   const valid =
-    cart.state.lines.length > 0 && problems.length === 0 && !tooLarge && slotOk && !blocked &&
+    cart.state.lines.length > 0 && problems.length === 0 && optionIssues === 0 && !tooLarge && slotOk && !blocked &&
     (edit ? true : nameErr.success && flatErr.success)
 
   const err = (field: 'name' | 'flat') => {
@@ -128,7 +135,7 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
   }
 
   const hint =
-    problems.length ? 'Fix the items above to continue'
+    problems.length || optionIssues ? 'Fix the items above to continue'
     : !slotOk ? 'Pick a pickup time to continue'
     : !edit && !nameErr.success ? 'Add your name to continue'
     : !edit && !flatErr.success ? 'Add your flat to continue' : ''
@@ -141,7 +148,7 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
     if (!valid) return
     inflight.current = true
     setBusy(true); setNetErr(false); setBlockedMsg(null); setServerFields({})
-    const items = cart.state.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, sugar: l.sugar }))
+    const items = cart.state.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, sugar: l.sugar, ...(l.options && { options: l.options }) }))
     const note = cart.state.note.trim() || null
     try {
       if (edit) {
@@ -182,6 +189,11 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
 
   function fixItems(items: ItemProblem[]) {
     for (const p of items) {
+      if (p.reason === 'option') {
+        // The kitchen switched an ingredient off: drop just that ingredient from the affected lines.
+        cart.state.lines.filter((l) => l.itemId === p.itemId && l.options?.[p.groupId ?? '']?.includes(p.choiceId ?? '')).forEach((l) => cart.fixOption(l, p.groupId!, p.choiceId!))
+        continue
+      }
       const lines = cart.state.lines.filter((l) => l.itemId === p.itemId)
       const rem = p.remaining ?? 0
       if (p.reason !== 'stock' || rem <= 0) lines.forEach((l) => cart.setQty(l.itemId, l.sugar, 0))
@@ -225,28 +237,41 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
               const item = menu[l.itemId]
               const p = problemOf(l.itemId)
               const soldOut = !!p && (p.reason !== 'stock' || (p.remaining ?? 0) <= 0)
+              const r = resolveLine(l)
+              const issue = r && !r.ok ? r.issue : null
+              const unit = (item?.price ?? 0) + (r && r.ok ? r.priceDelta : 0)
+              const picked = r && r.ok ? r.custom.map((c) => c.choices.join(', ')).join(' · ') : ''
               const msg = notices[l.itemId]
               const rem = item ? remainingFor(item, cart.held[l.itemId] ?? 0) : 0
               return (
-                <li key={`${l.itemId}${l.sugar}`}>
-                  <Card className={clsx('flex items-center gap-3 !p-3', soldOut && '!border-tomato-text')}>
+                <li key={lineKey(l)}>
+                  <Card className={clsx('flex items-center gap-3 !p-3', (soldOut || issue) && '!border-tomato-text')}>
                     <div className="shrink-0"><ItemIllustration name={item?.illustration ?? l.itemId} size={48} /></div>
                     <div className="min-w-0 flex-1">
                       <p className="m-0 text-body font-bold leading-5">
-                        {item?.name ?? l.itemId} {item && <span className="inline-block align-middle"><VegMark veg={item.veg} size={14} /></span>}
+                        {item?.name ?? l.itemId} {item && <span className="inline-block align-middle"><VegMark veg={item.veg && !(r && r.ok && r.nonVeg)} size={14} /></span>}
                       </p>
-                      <p className="m-0 text-small text-ink-deep/80">{l.sugar && l.sugar !== 'regular' ? `${SUGAR_TEXT[l.sugar]} · ` : ''}<span className="tnum">{rupees((item?.price ?? 0) * l.qty)}</span></p>
+                      {picked && <p className="m-0 text-small text-ink-deep/80">{picked}</p>}
+                      <p className="m-0 text-small text-ink-deep/80">{l.sugar && l.sugar !== 'regular' ? `${SUGAR_TEXT[l.sugar]} · ` : ''}<span className="tnum">{rupees(unit * l.qty)}</span></p>
                     </div>
                     {soldOut ? (
-                      <Button variant="tomato" onClick={() => cart.setQty(l.itemId, l.sugar, 0)}>Remove</Button>
+                      <Button variant="tomato" onClick={() => cart.setQty(l.itemId, l.sugar, 0, l.options)}>Remove</Button>
                     ) : (
                       <QtyStepper
                         label={item?.name ?? 'item'} qty={l.qty} min={0} max={Number.isFinite(rem) ? Math.max(rem - (cart.totalQtyOf(l.itemId) - l.qty), 1) : 99}
-                        onChange={(n) => cart.setQty(l.itemId, l.sugar, n)}
+                        onChange={(n) => cart.setQty(l.itemId, l.sugar, n, l.options)}
                       />
                     )}
                   </Card>
                   {soldOut && <p role="alert" className="mx-1 mb-0 mt-1.5 text-small font-bold text-tomato-text">Sold out, remove</p>}
+                  {!soldOut && issue && (
+                    <p role="alert" className="mx-1 mb-0 mt-1.5 text-small font-bold text-tomato-text">
+                      {issue.message}{' '}
+                      {issue.kind === 'unavailable' && issue.choiceId
+                        ? <button className="underline underline-offset-2 cursor-pointer" onClick={() => cart.fixOption(l, issue.groupId, issue.choiceId!)}>Remove it</button>
+                        : <button className="underline underline-offset-2 cursor-pointer" onClick={() => cart.setQty(l.itemId, l.sugar, 0, l.options)}>Remove this item</button>}
+                    </p>
+                  )}
                   {!soldOut && msg && (
                     <p role="status" className="mx-1 mb-0 mt-1.5 text-small font-bold text-tomato-text">
                       {msg}{' '}
@@ -304,7 +329,7 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
         )}
 
         {!edit && problems.length === 0 && (
-          <ShareButton items={cart.state.lines.map((l) => ({ itemId: l.itemId, sugar: l.sugar, qty: l.qty }))} label="Share this cart (group order?)" />
+          <ShareButton items={cart.state.lines.map((l) => ({ itemId: l.itemId, sugar: l.sugar, qty: l.qty, ...(l.options && { options: l.options }) }))} label="Share this cart (group order?)" />
         )}
 
         <section aria-labelledby="h-sum">
@@ -340,12 +365,12 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
               {modal.items.map((p) => (
                 <li key={p.itemId} className="text-body">
                   <strong>{menu[p.itemId]?.name ?? p.itemId}</strong>{' '}
-                  {p.reason !== 'stock' || (p.remaining ?? 0) <= 0 ? 'just sold out.' : `has only ${p.remaining} left.`}
+                  {p.reason === 'option' ? (p.label ?? 'has an ingredient that just sold out.') : p.reason !== 'stock' || (p.remaining ?? 0) <= 0 ? 'just sold out.' : `has only ${p.remaining} left.`}
                 </li>
               ))}
             </ul>
             <Button size="lg" block onClick={() => fixItems(modal.items)}>
-              {modal.items.every((p) => p.reason !== 'stock' || (p.remaining ?? 0) <= 0) ? 'Remove and continue' : 'Update my cart'}
+              {modal.items.some((p) => p.reason === 'option') ? 'Remove it and continue' : modal.items.every((p) => p.reason !== 'stock' || (p.remaining ?? 0) <= 0) ? 'Remove and continue' : 'Update my cart'}
             </Button>
           </>
         )}

@@ -1,5 +1,6 @@
 import { TZDate } from '@date-fns/tz'
 import { TIMEZONE } from './constants.js'
+import { isQuickAddable } from './pricing.js'
 import { nextBookableSlots } from './slots.js'
 import type { CafeSettings, MenuItem, SlotDoc } from './types.js'
 
@@ -53,7 +54,7 @@ export function rightNow(a: {
 }): RightNow | null {
   const hour = new TZDate(a.now.getTime(), TIMEZONE).getHours()
   const mood = a.weather ? weatherMood(a.weather) : 'mild'
-  const pool = a.menu.filter((m) => m.available && (m.stock === null || m.stock > 0))
+  const pool = a.menu.filter((m) => m.available && (m.stock === null || m.stock > 0) && isQuickAddable(m))
   if (pool.length === 0) return null
 
   const score = (m: MenuRow) => {

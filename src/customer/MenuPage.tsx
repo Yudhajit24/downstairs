@@ -18,6 +18,7 @@ import { useWeather } from '../lib/weather'
 import { AskPicks } from './AskPicks'
 import { RightNow } from './RightNow'
 import { isSoldOut, remainingFor, useCart } from './CartContext'
+import { checkLine } from './checkLine'
 import { ItemRow } from './ItemRow'
 import { ItemSheet } from './ItemSheet'
 import { useRecentOrders } from './RecentOrders'
@@ -179,17 +180,17 @@ function UsualCard() {
   const last = orders.find((o) => o.status === 'picked_up')
   if (!last || !ready) return null
 
-  const lines = last.items.map((l) => ({ l, item: menu[l.itemId] }))
-  const skipped = lines.filter(({ item }) => !item || isSoldOut(item))
-  const usable = lines.filter(({ item }) => item && !isSoldOut(item))
+  const lines = last.items.map((l) => ({ l, item: menu[l.itemId], c: checkLine(menu[l.itemId], l) }))
+  const skipped = lines.filter(({ c }) => !c.usable)
+  const usable = lines.filter(({ c }) => c.usable)
   if (!usable.length) return null
 
   const add = () => {
-    for (const { l, item } of usable) {
+    for (const { l, item, c } of usable) {
       const rem = remainingFor(item!)
       const room = rem - cart.totalQtyOf(l.itemId)
       const qty = Math.min(l.qty, room)
-      if (qty > 0) cart.add(l.itemId, l.sugar, qty, Number.isFinite(rem) ? rem : undefined)
+      if (qty > 0) cart.add(l.itemId, l.sugar, qty, Number.isFinite(rem) ? rem : undefined, c.options)
     }
     toast({
       message: skipped.length ? `Added without ${skipped.map((s) => s.l.name).join(', ')}, sold out.` : 'Your usual is in the cart.',
@@ -200,14 +201,14 @@ function UsualCard() {
     <section aria-label="Your usual" className="rounded-card border-2 border-ink bg-paper-raised p-4 shadow-hard">
       <p className="m-0 font-script text-script font-bold leading-5 text-tomato-text">your usual</p>
       <ul className="m-0 mb-3 mt-1 list-none p-0 text-small">
-        {lines.map(({ l, item }) => (
-          <li key={`${l.itemId}${l.sugar}`} className={!item || isSoldOut(item) ? 'text-fog line-through' : ''}>
-            {l.qty} × {l.name}{l.sugar && l.sugar !== 'regular' ? `, ${SUGAR_TEXT[l.sugar]}` : ''}
+        {lines.map(({ l, c }) => (
+          <li key={`${l.itemId}${l.sugar}${c.picked}`} className={!c.usable ? 'text-fog line-through' : ''}>
+            {l.qty} × {l.name}{l.sugar && l.sugar !== 'regular' ? `, ${SUGAR_TEXT[l.sugar]}` : ''}{l.custom?.length ? ` (${l.custom.map((x) => x.choices.join(', ')).join(' · ')})` : ''}
           </li>
         ))}
       </ul>
       {skipped.length > 0 && <p className="mb-3 mt-0 text-small text-tomato-text">{skipped.map((s) => s.l.name).join(', ')} {skipped.length === 1 ? 'is' : 'are'} sold out right now, we'll skip {skipped.length === 1 ? 'it' : 'them'}.</p>}
-      <Button block onClick={add}>Add to cart · {rupees(usable.reduce((n, { l, item }) => n + item!.price * l.qty, 0))}</Button>
+      <Button block onClick={add}>Add to cart · {rupees(usable.reduce((n, { l, c }) => n + c.unit * l.qty, 0))}</Button>
     </section>
   )
 }

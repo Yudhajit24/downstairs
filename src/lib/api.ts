@@ -31,7 +31,7 @@ async function request<T>(method: string, path: string, body?: unknown, token?: 
 
 export interface OrderBody {
   customer: { name: string; flat: string }
-  items: { itemId: string; qty: number; sugar: string | null }[]
+  items: { itemId: string; qty: number; sugar: string | null; options?: Record<string, string[]> }[]
   slotId: string
   note: string | null
 }
@@ -42,6 +42,7 @@ export type KitchenActionBody =
   | { type: 'ackChanges'; orderId: string }
   | { type: 'setItem'; itemId: string; available?: boolean; stock?: number | null }
   | { type: 'setSlot'; slotId: string; closed: boolean }
+  | { type: 'setChoice'; itemId: string; groupId: string; choiceId: string; available: boolean }
   | { type: 'setSettings'; paused?: boolean; forceOpen?: boolean; banner?: string | null }
 
 export interface AssistResponse { source: 'ai' | 'rules'; picks: { itemId: string; reason: string }[]; note?: string }

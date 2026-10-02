@@ -3,7 +3,7 @@ import { BottomSheet, Button, useToast } from '../design'
 import { api, ApiClientError } from '../lib/api'
 import { Spinner } from './ui'
 
-interface Line { itemId: string; sugar: string | null; qty: number }
+interface Line { itemId: string; sugar: string | null; qty: number; options?: Record<string, string[]> }
 
 /**
  * "Share this order": turns a list of lines into a /t/<id> link (the server dedupes identical carts)

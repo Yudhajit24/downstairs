@@ -22,10 +22,16 @@ export const flatSchema = z
 
 export const sugarSchema = z.enum(['regular', 'less', 'none'])
 
+/** groupId -> choice ids. Bounded so a hostile client cannot send a huge object. */
+export const selectionsSchema = z
+  .record(z.string().min(1).max(32), z.array(z.string().min(1).max(32)).max(12))
+  .refine((o) => Object.keys(o).length <= 8, 'Too many option groups')
+
 export const lineSchema = z.object({
   itemId: z.string().min(1).max(64),
   qty: z.number().int().min(1).max(99),
   sugar: sugarSchema.nullish(),
+  options: selectionsSchema.nullish(),
 })
 
 export const slotIdSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}_([01]\d|2[0-3])[0-5]\d$/, 'Invalid slot')
@@ -70,6 +76,13 @@ export const kitchenActionSchema = z.discriminatedUnion('type', [
     stock: z.number().int().min(0).max(9999).nullable().optional(),
   }),
   z.object({ type: z.literal('setSlot'), slotId: slotIdSchema, closed: z.boolean() }),
+  z.object({
+    type: z.literal('setChoice'),
+    itemId: z.string().min(1).max(64),
+    groupId: z.string().min(1).max(32),
+    choiceId: z.string().min(1).max(32),
+    available: z.boolean(),
+  }),
   z.object({
     type: z.literal('setSettings'),
     paused: z.boolean().optional(),

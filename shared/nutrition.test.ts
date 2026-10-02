@@ -6,8 +6,8 @@ const menu = Object.entries(MENU_SEED).map(([id, m]) => ({ id, ...m }))
 const ids = (l: { id: string }[]) => l.map((x) => x.id)
 
 describe('seed nutrition', () => {
-  it('every item has approximate nutrition', () => {
-    for (const m of menu) {
+  it('every ordinary item has approximate nutrition (build-your-own items depend on the picks)', () => {
+    for (const m of menu.filter((x) => !x.options)) {
       expect(m.nutrition, m.id).toBeDefined()
       expect(m.nutrition!.kcal).toBeGreaterThanOrEqual(0)
       expect(m.nutrition!.protein).toBeGreaterThanOrEqual(0)

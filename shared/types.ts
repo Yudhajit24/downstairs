@@ -2,6 +2,29 @@ export type Category = 'hot' | 'cold' | 'breakfast' | 'bakes'
 export type Sugar = 'regular' | 'less' | 'none'
 export type Status = 'new' | 'preparing' | 'ready' | 'picked_up' | 'cancelled'
 
+/** A choice inside an option group (a bread, a filling, a sauce). `available` is the kitchen's live switch. */
+export interface OptionChoice {
+  id: string
+  label: string
+  priceDelta: number
+  prepDelta?: number
+  /** True for ingredients that make the item non-veg (e.g. egg). */
+  nonVeg?: boolean
+  available: boolean
+}
+
+/** A group of choices. `min`/`max` are how many the customer must/may pick (min 1, max 1 = pick exactly one). */
+export interface OptionGroup {
+  id: string
+  label: string
+  min: number
+  max: number
+  choices: OptionChoice[]
+}
+
+/** The customer's picks: option group id -> chosen choice ids. */
+export type Selections = Record<string, string[]>
+
 export interface MenuItem {
   name: string
   category: Category
@@ -15,6 +38,8 @@ export interface MenuItem {
   illustration: string
   sortOrder: number
   tags: string[]
+  /** Build-your-own items (e.g. a sandwich). Absent for ordinary items. */
+  options?: OptionGroup[]
   /** Approximate values per serving (estimates, labelled "approx" in the UI). */
   nutrition?: { kcal: number; protein: number }
 }
@@ -49,6 +74,12 @@ export interface OrderLine {
   qty: number
   sugar: Sugar | null
   prepUnits: number
+  /** Chosen option ids per group (build-your-own items). `price` and `prepUnits` already include their deltas. */
+  options?: Selections
+  /** Snapshot of the chosen labels for the kitchen ticket and receipts, taken from the menu at order time. */
+  custom?: { group: string; choices: string[] }[]
+  /** True when a chosen ingredient is non-veg (e.g. egg), even though the base item is veg. */
+  nonVeg?: boolean
 }
 
 export interface OrderChange {
@@ -94,8 +125,12 @@ export interface ApiErrorBody {
 
 export interface ItemProblem {
   itemId: string
-  reason: 'missing' | 'unavailable' | 'stock'
+  reason: 'missing' | 'unavailable' | 'stock' | 'option'
   remaining: number | null
+  /** For reason 'option': which choice is the problem. */
+  groupId?: string
+  choiceId?: string
+  label?: string
 }
 
 export interface SlotSuggestion {
@@ -106,7 +141,7 @@ export interface SlotSuggestion {
 /** templates/{id}: a shared cart. The id is a hash of the normalised lines, so the same cart always has the same link. */
 export interface TemplateDoc {
   id: string
-  items: { itemId: string; sugar: Sugar | null; qty: number }[]
+  items: { itemId: string; sugar: Sugar | null; qty: number; options?: Selections }[]
   itemCount: number
   createdAt: Date
 }

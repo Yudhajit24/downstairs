@@ -1,7 +1,7 @@
 import { COPY } from '../../shared/constants.js'
 import { advance, canCancel, revert } from '../../shared/status.js'
 import {
-  buildLines, diffOrder, findItemProblems, qtyByItem,
+  buildLines, diffOrder, findItemProblems, lineKey, optionProblemsToItemProblems, qtyByItem, type OptionProblem,
 } from '../../shared/pricing.js'
 import {
   dateKey, daySlotTimes, formatTime12, isBookable, isCafeOpen, makeSlotId, nextBookableSlots, nextOpen,
@@ -44,6 +44,17 @@ function assertCafeOpen(settings: CafeSettings, now: Date) {
     throw fail('CLOSED', COPY.closed(n.label), n)
   }
   if (settings.paused) throw fail('PAUSED', COPY.paused)
+}
+
+/**
+ * Bad picks on a build-your-own item: a choice the kitchen switched off is ITEM_UNAVAILABLE (reason 'option', so the client can
+ * offer to drop it); anything else (missing required pick, unknown choice, too many) is a plain VALIDATION error.
+ */
+function assertOptions(problems: OptionProblem[]) {
+  if (problems.length === 0) return
+  const invalid = problems.find((p) => p.issue.kind === 'invalid')
+  if (invalid) throw fail('VALIDATION', invalid.issue.message, { fields: { items: invalid.issue.message }, itemId: invalid.itemId })
+  throw fail('ITEM_UNAVAILABLE', problems[0].issue.message, { items: optionProblemsToItemProblems(problems) })
 }
 
 function assertLimits(settings: CafeSettings, itemCount: number, units: number) {
@@ -112,6 +123,7 @@ export async function createOrder(db: Db, input: CreateOrderInput, now: Date): P
     if (problems.length) throw fail('ITEM_UNAVAILABLE', 'Some items are no longer available.', { items: problems })
 
     const built = buildLines(input.items, menu)
+    assertOptions(built.optionProblems)
     assertLimits(settings, built.itemCount, built.units)
     await assertSlot(tx, { settings, now, slotId: input.slotId, slot, units: built.units })
 
@@ -158,7 +170,9 @@ export async function editOrder(db: Db, id: string, input: EditInput, now: Date)
     const problems = findItemProblems(requested, menu, held)
     if (problems.length) throw fail('ITEM_UNAVAILABLE', 'Some items are no longer available.', { items: problems })
 
-    const built = buildLines(input.items, menu)
+    // An order may keep an ingredient it already has even if the kitchen has since switched it off.
+    const built = buildLines(input.items, menu, { keep: new Set(order.items.map(lineKey)) })
+    assertOptions(built.optionProblems)
     assertLimits(settings, built.itemCount, built.units)
 
     // An unchanged slot may already be inside the lead window; keeping it is fine unless it grows or is closed.
@@ -264,6 +278,17 @@ export async function kitchenAction(db: Db, a: KitchenAction, now: Date): Promis
         if (a.available !== undefined) patch.available = a.available
         if (a.stock !== undefined) patch.stock = a.stock
         if (Object.keys(patch).length) tx.update(`menu/${a.itemId}`, patch)
+        return { noop: false }
+      }
+      case 'setChoice': {
+        const item = await tx.get<MenuItem>(`menu/${a.itemId}`)
+        if (!item) throw fail('NOT_FOUND', 'Item not found.')
+        const group = item.options?.find((g) => g.id === a.groupId)
+        const choice = group?.choices.find((c) => c.id === a.choiceId)
+        if (!group || !choice) throw fail('NOT_FOUND', 'Option not found.')
+        tx.update(`menu/${a.itemId}`, {
+          options: item.options!.map((g) => g.id !== a.groupId ? g : { ...g, choices: g.choices.map((c) => (c.id === a.choiceId ? { ...c, available: a.available } : c)) }),
+        })
         return { noop: false }
       }
       case 'setSlot': {

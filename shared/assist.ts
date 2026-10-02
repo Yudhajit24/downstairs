@@ -1,3 +1,4 @@
+import { isQuickAddable } from './pricing.js'
 import { rightNow, type MenuRow, type WeatherNow } from './suggest.js'
 
 /** What a free-text request asks for. Hard constraints (budget, veg) are enforced in code, never left to a model. */
@@ -34,7 +35,7 @@ export function parseQuery(raw: string): Constraints {
 /** Items that may be suggested at all: orderable now, and within the hard constraints. */
 export function eligible(menu: MenuRow[], c: Constraints): MenuRow[] {
   return menu.filter((m) =>
-    m.available && (m.stock === null || m.stock > 0) &&
+    m.available && (m.stock === null || m.stock > 0) && isQuickAddable(m) &&
     (c.maxPrice === undefined || m.price <= c.maxPrice) &&
     (!c.veg || m.veg),
   )

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { dateKey, daySlotTimes, makeSlotId, slotStartDate } from '../../shared/slots'
+import type { OptionGroup } from '../../shared/types'
 import { Drawer, Switch, useToast, VegMark } from '../design'
 import { useCafe } from '../lib/CafeData'
 import { time12 } from '../lib/format'
@@ -19,6 +20,34 @@ export function useRun() {
 
 const step = 'grid size-14 place-items-center rounded-btn border-2 border-ink bg-paper-raised text-display-m font-bold text-ink cursor-pointer disabled:opacity-40'
 
+/** Per-ingredient switches for build-your-own items: turn off what has run out; customers can no longer pick it. */
+function Ingredients({ itemId, groups, disabled }: { itemId: string; groups: OptionGroup[]; disabled: boolean }) {
+  const run = useRun()
+  const [open, setOpen] = useState(false)
+  const off = groups.reduce((n, g) => n + g.choices.filter((c) => !c.available).length, 0)
+  return (
+    <div className="mt-3 border-t-2 border-dashed border-ink pt-3">
+      <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="flex min-h-14 w-full items-center justify-between text-left text-body font-bold text-ink cursor-pointer">
+        <span>Ingredients{off > 0 && <span className="ml-2 text-small text-tomato-text">{off} off</span>}</span>
+        <span aria-hidden>{open ? '−' : '+'}</span>
+      </button>
+      {open && groups.map((g) => (
+        <div key={g.id} className="mb-2">
+          <p className="m-0 mb-1 text-small font-bold uppercase tracking-widest text-ink-deep/70">{g.label}</p>
+          <ul className="m-0 flex list-none flex-col gap-1 p-0">
+            {g.choices.map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-3 py-1">
+                <span className={`text-body ${c.available ? '' : 'text-fog line-through'}`}>{c.label}</span>
+                <Switch on={c.available} disabled={disabled} label={`${c.label} available`} onChange={(v) => run({ type: 'setChoice', itemId, groupId: g.id, choiceId: c.id, available: v })} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function StockDrawer({ open, onClose, disabled }: { open: boolean; onClose: () => void; disabled: boolean }) {
   const { menuList } = useCafe()
   const run = useRun()
@@ -36,6 +65,7 @@ export function StockDrawer({ open, onClose, disabled }: { open: boolean; onClos
                   <Switch on={m.available} disabled={disabled} label={`${m.name} available`} onChange={(v) => run({ type: 'setItem', itemId: m.id, available: v })} />
                 </div>
               </div>
+              {m.options?.length ? <Ingredients itemId={m.id} groups={m.options} disabled={disabled} /> : null}
               <div className="mt-3 flex items-center gap-2">
                 {m.stock === null ? (
                   <>

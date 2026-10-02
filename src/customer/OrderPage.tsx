@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { COPY } from '../../shared/constants'
-import type { Order, Sugar } from '../../shared/types'
+import type { Order } from '../../shared/types'
 import { BottomSheet, Button, Card, Skeleton, StatusStepper, useToast, VegMark } from '../design'
 import { SceneCancelled, SceneNew, ScenePickedUp, ScenePreparing, SceneReady } from '../illustrations'
 import { api, ApiClientError } from '../lib/api'
@@ -10,7 +10,8 @@ import { useCafe } from '../lib/CafeData'
 import { useOrder } from '../lib/hooks'
 import { Poster, posterOfDay } from '../posters/Poster'
 import { rupees, STATUS_COPY, SUGAR_TEXT, time12, tokenLabel } from '../lib/format'
-import { isSoldOut, remainingFor, useCart } from './CartContext'
+import { remainingFor, useCart, type CartLine } from './CartContext'
+import { checkLine } from './checkLine'
 import { useRecentOrders } from './RecentOrders'
 import { ShareButton } from './ShareButton'
 import { Notice, ReconnectingBar, TopBar } from './ui'
@@ -85,17 +86,18 @@ function OrderBody({ order }: { order: Order }) {
 
   function orderAgain() {
     const skipped: string[] = []
-    const lines: { itemId: string; sugar: Sugar | null; qty: number }[] = []
+    const lines: CartLine[] = []
     for (const l of order.items) {
       const item = menu[l.itemId]
-      if (!item || isSoldOut(item)) { skipped.push(l.name); continue }
-      const rem = remainingFor(item)
+      const c = checkLine(item, l)
+      if (!c.usable) { skipped.push(c.reason === 'sold out' ? l.name : `${l.name} (${c.reason})`); continue }
+      const rem = remainingFor(item!)
       const qty = Math.min(l.qty, rem - lines.filter((x) => x.itemId === l.itemId).reduce((n, x) => n + x.qty, 0))
-      if (qty > 0) lines.push({ itemId: l.itemId, sugar: l.sugar, qty })
+      if (qty > 0) lines.push({ itemId: l.itemId, sugar: l.sugar, qty, ...(c.options && Object.keys(c.options).length > 0 && { options: c.options }) })
     }
     cart.replace(lines)
     cart.setSlot(null)
-    if (skipped.length) toast({ message: `Left out ${skipped.join(', ')}, sold out.` }, 5000)
+    if (skipped.length) toast({ message: `Left out ${skipped.join(', ')}.` }, 5000)
     nav('/cart')
   }
 
@@ -134,8 +136,9 @@ function OrderBody({ order }: { order: Order }) {
           {order.items.map((l) => (
             <li key={`${l.itemId}${l.sugar}`} className="flex items-baseline justify-between gap-3 text-body">
               <span>
-                {l.qty} × {l.name} <span className="inline-block align-middle"><VegMark veg={menu[l.itemId]?.veg ?? true} size={14} /></span>
+                {l.qty} × {l.name} <span className="inline-block align-middle"><VegMark veg={(menu[l.itemId]?.veg ?? true) && !l.nonVeg} size={14} /></span>
                 {l.sugar && l.sugar !== 'regular' && <span className="text-small text-ink-deep/80"> · {SUGAR_TEXT[l.sugar]}</span>}
+                {l.custom?.length ? <span className="block text-small text-ink-deep/80">{l.custom.map((c) => c.choices.join(', ')).join(' · ')}</span> : null}
               </span>
               <span className="tnum">{rupees(l.price * l.qty)}</span>
             </li>
@@ -159,7 +162,7 @@ function OrderBody({ order }: { order: Order }) {
       {(order.status === 'cancelled' || order.status === 'picked_up') && (
         <Button size="lg" block onClick={orderAgain}>Order again</Button>
       )}
-      {order.status !== 'cancelled' && <ShareButton items={order.items.map((i) => ({ itemId: i.itemId, sugar: i.sugar, qty: i.qty }))} />}
+      {order.status !== 'cancelled' && <ShareButton items={order.items.map((i) => ({ itemId: i.itemId, sugar: i.sugar, qty: i.qty, ...(i.options && { options: i.options }) }))} />}
       <Link to="/orders" className="text-center text-small font-bold text-ink underline underline-offset-4">All my orders</Link>
 
       <BottomSheet open={confirm} onClose={() => setConfirm(false)} title="Cancel this order?">

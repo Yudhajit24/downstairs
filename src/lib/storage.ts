@@ -23,6 +23,6 @@ export function pushRecentId(id: string): string[] {
   return next
 }
 
-export interface StoredCart { lines: { itemId: string; sugar: string | null; qty: number }[]; note: string; slotId: string | null }
+export interface StoredCart { lines: { itemId: string; sugar: string | null; qty: number; options?: Record<string, string[]> }[]; note: string; slotId: string | null }
 export const loadCart = () => read<StoredCart | null>('ds.cart', null)
 export const saveCart = (c: StoredCart) => write('ds.cart', c)

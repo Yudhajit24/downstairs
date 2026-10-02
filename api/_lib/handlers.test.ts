@@ -225,3 +225,34 @@ describe('POST /api/assist', () => {
     expect((await call(assistH, { method: 'GET' })).code).toBe(405)
   })
 })
+
+describe('build-your-own over HTTP', () => {
+  const sandwich = (options: unknown) => ({ items: [{ itemId: 'build-sandwich', qty: 1, options }] })
+  it('creates a priced order from picks', async () => {
+    const r = await call(createH, { body: order(sandwich({ bread: ['focaccia'], filling: ['paneer-tikka'], extras: ['olives'] })) })
+    expect(r.code).toBe(201)
+    expect(r.body.order.total).toBe(80 + 15 + 30 + 15)
+    expect(r.body.order.items[0].custom).toHaveLength(3)
+  })
+  it('400 when a required pick is missing, with a field message', async () => {
+    const r = await call(createH, { body: order(sandwich({ filling: ['paneer-tikka'] })) })
+    expect(r.code).toBe(400)
+    expect(r.body).toMatchObject({ code: 'VALIDATION', message: 'Pick your bread.' })
+  })
+  it('400 on malformed options (wrong shape, too many groups, oversized lists)', async () => {
+    expect((await call(createH, { body: order(sandwich({ bread: 'white' })) })).code).toBe(400)
+    expect((await call(createH, { body: order(sandwich(Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`g${i}`, ['x']])))) })).code).toBe(400)
+    expect((await call(createH, { body: order(sandwich({ bread: Array(13).fill('white') })) })).code).toBe(400)
+  })
+  it('409 ITEM_UNAVAILABLE (reason option) once the kitchen switches an ingredient off', async () => {
+    await call(actionH, { auth: 'Bearer staff-token', body: { type: 'setChoice', itemId: 'build-sandwich', groupId: 'extras', choiceId: 'olives', available: false } })
+    const r = await call(createH, { body: order(sandwich({ bread: ['white'], filling: ['grilled-veg'], extras: ['olives'] })) })
+    expect(r.code).toBe(409)
+    expect(r.body.details.items[0]).toMatchObject({ reason: 'option', groupId: 'extras', choiceId: 'olives' })
+  })
+  it('setChoice needs staff and a known option', async () => {
+    const a = { type: 'setChoice', itemId: 'build-sandwich', groupId: 'extras', choiceId: 'olives', available: true }
+    expect((await call(actionH, { body: a })).code).toBe(401)
+    expect((await call(actionH, { auth: 'Bearer staff-token', body: { ...a, choiceId: 'nope' } })).code).toBe(404)
+  })
+})

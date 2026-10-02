@@ -26,16 +26,16 @@ export function ItemRow({ item, cart, onOpenOptions }: { item: MenuEntry; cart: 
           <p className="m-0 mt-0.5 text-small text-ink-deep/80">{item.description}</p>
           {item.nutrition && <p className="m-0 mt-0.5 text-micro font-bold tnum text-ink">{nutritionLine(item)}</p>}
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-body font-bold tnum">{rupees(item.price)}</span>
+            <span className="text-body font-bold tnum">{item.options?.length ? `from ${rupees(item.price)}` : rupees(item.price)}</span>
             {low && !soldOut && <span className="font-script text-script font-bold leading-5 text-tomato-text">only {item.stock} left!</span>}
           </div>
         </div>
         {soldOut ? (
           <span className="sr-only">Sold out</span>
-        ) : item.hasSugarOption ? (
+        ) : item.hasSugarOption || item.options?.length ? (
           <div className="flex shrink-0 flex-col items-center gap-1">
             <Button variant="secondary" onClick={() => onOpenOptions(item)} aria-label={`Choose options for ${item.name}`}>
-              Add
+              {item.options?.length ? 'Build' : 'Add'}
             </Button>
             {inCart > 0 && <span className="text-micro font-bold text-ink tnum">{inCart} in cart</span>}
           </div>

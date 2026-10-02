@@ -8,7 +8,8 @@ import { useCafe } from '../lib/CafeData'
 import { fromFs } from '../lib/convert'
 import { db } from '../lib/firebase'
 import { rupees, SUGAR_TEXT } from '../lib/format'
-import { isSoldOut, remainingFor, useCart } from './CartContext'
+import { remainingFor, useCart } from './CartContext'
+import { checkLine } from './checkLine'
 import { TopBar } from './ui'
 
 /** /t/:id — someone shared an order. Shows it, flags anything unavailable, and drops it into your cart. */
@@ -27,20 +28,20 @@ export function TemplatePage() {
       .catch(() => setTpl(null))
   }, [id])
 
-  const rows = (tpl?.items ?? []).map((l) => ({ l, item: menu[l.itemId] }))
-  const usable = rows.filter(({ item }) => item && !isSoldOut(item))
-  const skipped = rows.filter(({ item }) => !item || isSoldOut(item))
-  const total = usable.reduce((n, { l, item }) => n + item!.price * l.qty, 0)
+  const rows = (tpl?.items ?? []).map((l) => ({ l, item: menu[l.itemId], c: checkLine(menu[l.itemId], l) }))
+  const usable = rows.filter((r) => r.c.usable)
+  const skipped = rows.filter((r) => !r.c.usable)
+  const total = usable.reduce((n, { l, c }) => n + c.unit * l.qty, 0)
 
   function add(replace: boolean) {
     if (replace) cart.replace([])
-    for (const { l, item } of usable) {
+    for (const { l, item, c } of usable) {
       const rem = remainingFor(item!)
       const room = replace ? rem : rem - cart.totalQtyOf(l.itemId)
       const qty = Math.min(l.qty, room)
-      if (qty > 0) cart.add(l.itemId, l.sugar as never, qty, Number.isFinite(rem) ? rem : undefined)
+      if (qty > 0) cart.add(l.itemId, l.sugar as never, qty, Number.isFinite(rem) ? rem : undefined, c.options)
     }
-    if (skipped.length) toast({ message: `Left out ${skipped.map((s) => s.l.itemId).join(', ')}, sold out.` }, 4500)
+    if (skipped.length) toast({ message: `Left out ${skipped.map((s) => s.item?.name ?? s.l.itemId).join(', ')}.` }, 4500)
     nav('/cart')
   }
 
@@ -65,15 +66,17 @@ export function TemplatePage() {
           </div>
           <Card raised>
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
-              {rows.map(({ l, item }) => {
-                const out = !item || isSoldOut(item)
+              {rows.map(({ l, item, c }) => {
+                const out = !c.usable
                 return (
                   <li key={`${l.itemId}${l.sugar}`} className={`flex items-baseline justify-between gap-3 text-body ${out ? 'text-fog line-through' : ''}`}>
                     <span>
-                      {l.qty} × {item?.name ?? l.itemId} {item && <span className="inline-block align-middle"><VegMark veg={item.veg} size={14} /></span>}
+                      {l.qty} × {item?.name ?? l.itemId} {item && <span className="inline-block align-middle"><VegMark veg={item.veg && !c.nonVeg} size={14} /></span>}
                       {l.sugar && l.sugar !== 'regular' && <span className="text-small"> · {SUGAR_TEXT[l.sugar as keyof typeof SUGAR_TEXT]}</span>}
+                      {c.picked && <span className="block text-small">{c.picked}</span>}
+                      {out && c.reason && c.reason !== 'sold out' && <span className="block text-small font-bold no-underline">{c.reason}</span>}
                     </span>
-                    {item && <span className="tnum">{rupees(item.price * l.qty)}</span>}
+                    {item && <span className="tnum">{rupees(c.unit * l.qty)}</span>}
                   </li>
                 )
               })}

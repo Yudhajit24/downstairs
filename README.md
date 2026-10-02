@@ -8,6 +8,7 @@ Order-ahead web app for a small café inside a residential society (Palm Grove R
 - **Shareable order templates:** share any cart or order as a `/t/<id>` link that drops the same items into a friend's cart.
 - **"Right now" suggestions:** picks from the weather (Open-Meteo), the time of day and how full the next pickup slots are. When the kitchen is busy it leads with grab-and-go bakes.
 - **Fit picks:** a healthier section (light and high-protein) with approximate nutrition and filters.
+- **Build Your Sandwich:** Subway-style customisation (bread, fillings, extras, sauce) with live pricing, min/max rules and ingredient availability the kitchen can switch off.
 - **Ask for a pick (AI):** free-text suggestions, answered by an open-source LLM when configured and by a rule engine otherwise.
 
 ## Live

@@ -22,7 +22,7 @@ export function BottomSheet({
           />
           <motion.div
             role="dialog" aria-modal="true" aria-label={title}
-            className="relative w-full max-w-[440px] rounded-t-[24px] border-2 border-b-0 border-ink bg-paper-raised p-5 text-ink-deep pb-[max(20px,env(safe-area-inset-bottom))]"
+            className="relative w-full max-w-[440px] max-h-[90dvh] overflow-y-auto rounded-t-[24px] border-2 border-b-0 border-ink bg-paper-raised p-5 text-ink-deep pb-[max(20px,env(safe-area-inset-bottom))]"
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 380, damping: 36 }}
           >

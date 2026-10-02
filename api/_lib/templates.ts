@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { COPY } from '../../shared/constants.js'
-import { buildLines, findItemProblems, qtyByItem, lineKey } from '../../shared/pricing.js'
+import { buildLines, findItemProblems, lineKey, qtyByItem } from '../../shared/pricing.js'
 import type { CreateTemplateInput } from '../../shared/schemas.js'
 import type { CafeSettings, MenuItem, TemplateDoc } from '../../shared/types.js'
 import type { Db } from './db.js'
@@ -28,13 +28,16 @@ export async function createTemplate(db: Db, input: CreateTemplateInput, now: Da
     const missing = findItemProblems(qtyByItem(input.items), menu).filter((p) => p.reason === 'missing')
     if (missing.length) throw fail('ITEM_UNAVAILABLE', 'Some items are not on the menu.', { items: missing })
 
-    const built = buildLines(input.items, menu)
+    // Picks are validated (unknown group/choice, min/max) but ingredient availability is not: it may change before the link is opened.
+    const built = buildLines(input.items, menu, { allowUnavailable: true })
+    const bad = built.optionProblems.find((p) => p.issue.kind === 'invalid')
+    if (bad) throw fail('VALIDATION', bad.issue.message, { fields: { items: bad.issue.message } })
     if (built.itemCount > settings.maxItemsPerOrder) {
       throw fail('ORDER_TOO_LARGE', COPY.tooLarge, { maxItems: settings.maxItemsPerOrder, itemCount: built.itemCount })
     }
 
     const items = built.lines
-      .map((l) => ({ itemId: l.itemId, sugar: l.sugar, qty: l.qty }))
+      .map((l) => ({ itemId: l.itemId, sugar: l.sugar, qty: l.qty, ...(l.options && { options: l.options }) }))
       .sort((a, b) => (lineKey(a) < lineKey(b) ? -1 : 1))
     const id = createHash('sha256').update(JSON.stringify(items)).digest('base64url').slice(0, 12)
 
