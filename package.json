@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "live-check": "tsx --env-file=.env.local scripts/live-check.ts"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
