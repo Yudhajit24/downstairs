@@ -102,3 +102,6 @@ body {
 @keyframes steam { 0% { stroke-dashoffset: 20; opacity: 0 } 50% { opacity: 1 } 100% { stroke-dashoffset: 0; opacity: 0 } }
 
 @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-8px) } 75% { transform: translateX(8px) } }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

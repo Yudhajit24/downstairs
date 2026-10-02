@@ -40,7 +40,7 @@ export function ActiveOrderPill({ token, status, onClick }: { token: number; sta
   return (
     <button
       type="button" onClick={onClick}
-      className="press inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-ink bg-paper-raised px-3 text-small font-bold text-ink cursor-pointer"
+      className="press inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border-2 border-ink bg-paper-raised px-3 text-small font-bold text-ink cursor-pointer"
     >
       <span className="size-2.5 rounded-full border border-ink-deep" style={{ background: STATUS_COLOR[status] }} />
       <span className="tnum">#{String(token).padStart(3, '0')} · {STATUS_LABEL[status]} →</span>

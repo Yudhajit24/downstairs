@@ -26,3 +26,12 @@
 - **`@opentelemetry/api` is an explicit dependency.** `@google-cloud/firestore` requires it at runtime but doesn't install it; without it `firebase-admin` crashes on import (it was only present by accident).
 - **`npm run live-check`** runs the core scenarios against real Firestore and re-seeds afterwards. Don't run it against a production database with live orders (it resets menu stock and the settings doc).
 - **`npm run dev` serves `/api/*` itself** via a dev-only Vite plugin (`dev/api-plugin.ts`) that loads the same handler files Vercel runs. Why: `vercel dev` needs an interactive `vercel login` and project link. The `vercel` CLI is installed for Phase 5 deploys; `vercel dev` still works once logged in.
+- **Customer cart lives in one reducer with two targets** (`main`, persisted to localStorage; `edit`, in-memory). Editing an order never touches the cart you're building for a new one.
+- **The cart auto-clamps when stock drops** and says so inline ("Only 2 left, reduced to 2"); sold-out lines stay visible with "Sold out, remove" and block checkout until removed.
+- **"Next free" after a lost slot means the next slot after it**, not the earliest of the day (matches the 8:15 → 8:30 example).
+- **The checkout button is disabled until valid, and a one-line hint says why** ("Pick a pickup time to continue"), so a greyed button never looks broken.
+- **Order id is generated once per checkout mount and reused on every retry** (item fix, slot change, dropped network); a synchronous in-flight ref makes triple-taps send one request.
+- **Opening an order link adds it to "recent orders" on that device**, so a link opened from WhatsApp shows up in /orders (matrix row 21).
+- **"Open now" replaces "Open till 10 PM" while `forceOpen` is on**, because the 10 PM claim would be wrong at 11 PM in demo mode.
+- **PWA icons are PNGs drawn through the browser canvas** from the cup SVG (no rasteriser installed); includes a maskable variant and `apple-touch-icon`. No service worker.
+- **Time-of-day greeting and poster strip are not built yet**: both belong to the poster work in Phase 4 (spec 3.12).

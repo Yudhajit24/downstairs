@@ -1,0 +1,16 @@
+{
+  "name": "Downstairs",
+  "short_name": "downstairs",
+  "description": "Order ahead from your flat. Pick up at the Clubhouse counter.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4EEE2",
+  "theme_color": "#1F3BD6",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
