@@ -92,3 +92,10 @@
 - **Rotation was judged unnecessary:** the key never left this machine except into Vercel, and was never committed, pasted or logged. Rotate (below) only if the Mac is shared, a backup tool picked up the Downloads folder, or the Trash was synced somewhere.
 - **If you ever need to rotate or recover:** Firebase console → Project settings → Service accounts → Generate new private key; put its base64 in `.env.local` (`base64 -i key.json | tr -d '\n'`) and `vercel env add FIREBASE_SERVICE_ACCOUNT_BASE64 production --sensitive --force`; redeploy; then delete the old key under Google Cloud → IAM → Service accounts → Keys. Delete the downloaded file immediately afterwards.
 - **`npm run live-check` is time-of-day aware:** it uses the last two slots of the day and expects `min(3, slots left)` suggestions, so it passes at any hour.
+
+## Song of the day
+- **It lives on the order status page (New and Preparing), under the poster.** That's where people stare at the screen while the order brews, so "try this while you wait" has a natural moment. Not on the menu (already busy) and never on cart/checkout.
+- **Link out, never embed or host.** Two buttons open a Spotify and a YouTube *search* in a new tab. Search links can't go stale or point at the wrong track, the listener uses the service they already have, and we avoid licensing, autoplay and third-party SDKs. In-app preview would need Spotify's embed/Web API (and an account); deferred.
+- **No lyrics, only our own one-line blurbs** (<= 70 chars, tested). Titles and artists are facts; the line is original.
+- **Same daily rhythm as the poster, independent pick.** Deterministic by IST date (FNV-1a mod N), hashed with its own `song:` salt so song and poster don't change in lockstep. Whole society gets the same song that day.
+- **A hand-curated list of 14 well-known tracks** (a few Indian film songs among them) in `shared/songs.ts`, so editing is a one-line change. Titles/artists are from memory and should be sanity-checked by the owner; search links tolerate small mistakes.

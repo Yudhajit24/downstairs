@@ -5,6 +5,8 @@ import {
   type OrderStatus, type SlotState,
 } from '../design'
 import { Poster, POSTERS } from '../posters/Poster'
+import { SongCard } from '../customer/SongCard'
+import { SONGS } from '../../shared/songs'
 import { CAFE_LOCATION, CAFE_TAGLINE, CAFE_WORDMARK } from '../../shared/constants'
 import {
   HeroScene, ITEM_ILLUSTRATIONS, ItemIllustration, SceneCancelled, SceneNew, ScenePickedUp, ScenePreparing, SceneReady,
@@ -183,6 +185,8 @@ export function Styleguide() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {POSTERS.map((p) => <Poster key={p.id} poster={p} variant="card" />)}
         </div>
+        <Label>Song of the day</Label>
+        <div className="mb-6 max-w-[440px]"><SongCard song={SONGS[0]} /></div>
         <Label>Strip (menu)</Label>
         <div className="max-w-[440px]"><Poster poster={POSTERS[0]} variant="strip" /></div>
       </Section>

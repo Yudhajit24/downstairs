@@ -5,6 +5,7 @@ Order-ahead web app for a small café inside a residential society (Palm Grove R
 - **Customer view** (mobile-first): menu, cart, sugar options, pickup slots with capacity, place order, live status, edit/cancel while New, recent orders, reorder.
 - **Kitchen view** (`/kitchen`, tablet landscape): PIN gate, live KOT board, status changes with undo, cancel with reason, stock and slot controls, pause new orders, chime, wake lock.
 - **Poster of the day:** a daily riso-duotone art card (public-domain busts with pop accessories).
+- **Song of the day:** a daily track to try while your order brews, on the status page. One song for the whole society per IST day; links out to Spotify and YouTube.
 - **Shareable order templates:** share any cart or order as a `/t/<id>` link that drops the same items into a friend's cart.
 - **"Right now" suggestions:** picks from the weather (Open-Meteo), the time of day and how full the next pickup slots are. When the kitchen is busy it leads with grab-and-go bakes.
 - **Fit picks:** a healthier section (light and high-protein) with approximate nutrition and filters.
@@ -94,4 +95,5 @@ See [DECISIONS.md](DECISIONS.md) for every notable product and technical decisio
 - **Poster artwork:** public-domain objects from [The Metropolitan Museum of Art Open Access](https://www.metmuseum.org/about-the-met/policies-and-documents/open-access) (CC0 1.0), cropped and recoloured to a duotone. Each poster's object, source URL and licence are recorded in `src/posters/posters.json`. Objects: Marble head of Athena (248642), Marble head of a god, probably Dionysos (251347), Marble head of a youth (248901, 255422, 248311, 250744), Marble head of a woman (254639, 250655), Marble bust of a man (248722, 251198), Terracotta head of Dionysos (248106), Marble head of Athena, the so-called Athena Medici (258077), Marble head of Aphrodite? (251515).
 - Pop accessories (sunglasses, headphones, chai glass, steam) and all item and scene illustrations are original.
 - Fonts via Fontsource: Bowlby One, Caveat, DM Sans, Space Mono (all OFL).
+- **Song of the day:** a short list of well-known tracks in `shared/songs.ts`. We only link to Spotify/YouTube searches, host no audio, and quote no lyrics. The one-line blurbs are our own.
 - Open Peeps (Pablo Stanley, CC0) is not used; the scene figures are original line drawings.

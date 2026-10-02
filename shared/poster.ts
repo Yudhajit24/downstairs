@@ -23,3 +23,8 @@ export function greeting(now: Date, name?: string | null): string {
   const first = name?.trim().split(/\s+/)[0]
   return first ? `${base}, ${first}` : base
 }
+
+/** Song of the day: same idea as the poster (deterministic by IST date) but hashed with its own salt, so the two don't move in lockstep. */
+export function songIndex(dateKey: string, count: number): number {
+  return count <= 0 ? 0 : hash(`song:${dateKey}`) % count
+}
