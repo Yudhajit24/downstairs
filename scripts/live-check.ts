@@ -50,7 +50,9 @@ try {
 
   await fs.doc(`slots/${B}`).set({ date: dateKey(now), time: B.slice(-4), usedUnits: 15, closed: false })
   const e3 = await err(createOrder(db, body(1, [poha], B), now))
-  ok('full slot → SLOT_FULL with 3 suggestions', e3?.code === 'SLOT_FULL' && (e3.details as any).nextSlots.length === 3)
+  // Suggestions are the next bookable slots: up to 3, fewer when little of the day is left.
+const expectedSuggestions = Math.min(3, slots.length - 1) // every bookable slot except the full one
+ok(`full slot → SLOT_FULL with ${expectedSuggestions} suggestion(s)`, e3?.code === 'SLOT_FULL' && (e3.details as any).nextSlots.length === expectedSuggestions)
 
   await fs.doc(`slots/${B}`).set({ date: dateKey(now), time: B.slice(-4), usedUnits: 14, closed: false })
   const race = await Promise.allSettled([createOrder(db, body(2, [poha], B), now), createOrder(db, body(3, [poha], B), now)])
