@@ -10,3 +10,15 @@
 - **Dev preview config** at repo-parent `.claude/launch.json` runs `npm --prefix downstairs run dev`.
 - **Poster of the day (spec 3.12) is a Phase 4 item.** It lands after the core flow works. Phases 0–3 only leave room for it: no poster on cart/checkout, a slim strip on the menu, a full card on order status (New/Preparing), the closed screen and the empty kitchen board.
 - **Poster pipeline needs `sharp` (dev dependency) and CC0 source images** (Met, AIC, Smithsonian). Source URL and licence go in `posters.json` and the README.
+- **Business logic runs on a tiny `Db`/`Tx` interface** (`api/_lib/db.ts`). Firestore is the production adapter (`admin.ts`); tests use an in-memory store that serialises transactions, like Firestore retrying contended ones. Why: the logic is provable without credentials or an emulator. Not yet run against real Firestore; that happens in Phase 5.
+- **`forceOpen` also widens the slot grid to 00:00–23:45.** The spec says forceOpen = open 24 hours, but slots are 07:00–21:45, so an evaluator ordering at 11 PM would find no slot. Normal mode stays 07:00–21:45.
+- **Slots are today-only.** A future date is a VALIDATION error, a past date is `SLOT_PASSED`.
+- **A bakes-only order uses 0 prep units, so it can book a slot that is "full" for cooked items** (remaining ≥ 0). The slot chips show state for max(units, 1).
+- **Check order on create:** existing id (idempotent) → closed/paused → item availability → order limits → slot. Limits come before the slot so a 13-coffee order says "too large", not "slot full".
+- **Edits and cancels ignore `paused` and closed hours** (existing orders are unaffected). An unchanged slot skips the lead-time check unless the order grows. Prices on edit re-read the menu.
+- **Edits are no-ops when nothing changed** (no editCount bump, no UPDATED stamp). Starting an order (New → Preparing) marks edits as seen.
+- **Kitchen cancel is allowed from new/preparing/ready; picked_up and cancelled can't be reverted or cancelled again.** Cancelling twice is a no-op.
+- **Extra error codes `METHOD_NOT_ALLOWED` (405) and `INTERNAL` (500)** beyond the spec's table, same `{ code, message, details? }` shape.
+- **Relative imports use `.js` extensions** so the Vercel ESM runtime resolves them; Vite, Vitest and tsc map them back to `.ts`.
+- **`tsx` (dev dependency) runs `scripts/seed.ts`.** `npm run seed` reads `.env.local`.
+- **PIN check:** both sides hashed with SHA-256 then `timingSafeEqual`; 800 ms delay on a wrong PIN. No rate limiter in the MVP.
