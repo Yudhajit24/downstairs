@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { MotionConfig } from 'motion/react'
+import { Component, useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { ToastProvider } from '../design'
 import { Grain } from '../design'
@@ -12,6 +13,24 @@ import { RecentOrdersProvider } from '../customer/RecentOrders'
 import { CafeDataProvider } from '../lib/CafeData'
 import { Styleguide } from '../styleguide/Styleguide'
 import { CustomerFrame } from './CustomerFrame'
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  componentDidCatch(e: unknown) { console.error(e) }
+  render() {
+    if (!this.state.failed) return this.props.children
+    return (
+      <main className="grid min-h-dvh place-items-center bg-paper p-6 text-center">
+        <div>
+          <p className="m-0 font-display text-display-l text-ink">Oops.</p>
+          <p className="mb-4 mt-1 text-body">Something broke on our side. Your cart is safe.</p>
+          <button className="min-h-12 rounded-btn border-2 border-ink bg-ink px-5 font-bold text-paper-raised cursor-pointer" onClick={() => location.assign('/')}>Reload</button>
+        </div>
+      </main>
+    )
+  }
+}
 
 function Placeholder({ name }: { name: string }) {
   return <p className="p-6 font-display text-display-m text-ink">{name} · coming in a later phase</p>
@@ -43,6 +62,8 @@ function CustomerLayout() {
 
 export function App() {
   return (
+    <ErrorBoundary>
+    <MotionConfig reducedMotion="user">
     <BrowserRouter>
       <ToastProvider>
         <GrainGate />
@@ -59,5 +80,7 @@ export function App() {
         </Routes>
       </ToastProvider>
     </BrowserRouter>
+    </MotionConfig>
+    </ErrorBoundary>
   )
 }

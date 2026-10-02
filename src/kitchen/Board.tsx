@@ -1,9 +1,10 @@
 import clsx from 'clsx'
+import { motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CANCEL_REASONS } from '../../shared/constants'
 import type { Order, Status } from '../../shared/types'
 import { BottomSheet, useToast } from '../design'
-import { SceneNew } from '../illustrations'
+import { Poster, posterOfDay } from '../posters/Poster'
 import { cancelSound, chime } from '../lib/audio'
 import { useCafe } from '../lib/CafeData'
 import { time12, tokenLabel } from '../lib/format'
@@ -43,6 +44,8 @@ export function Board() {
   const [tab, setTab] = useState<Col>('new')
   const colRefs = useRef<Partial<Record<Col, HTMLElement | null>>>({})
   const scroller = useRef<HTMLDivElement>(null)
+  // Only tickets that arrive after the board has settled slide in (not the whole board on first load).
+  const [settled, setSettled] = useState(false)
 
   useWakeLock(true)
 
@@ -66,6 +69,8 @@ export function Board() {
     m.picked_up.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
     return m
   }, [orders])
+
+  useEffect(() => { if (loaded) { const t = setTimeout(() => setSettled(true), 1200); return () => clearTimeout(t) } }, [loaded])
 
   const todayCount = orders.filter((o) => o.status !== 'cancelled').length
   const inProgress = cols.new.length + cols.preparing.length + cols.ready.length
@@ -186,9 +191,11 @@ export function Board() {
               <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-6 pt-3">
                 {c.id === 'new' && empty && <EmptyBoard />}
                 {c.id !== 'picked_up' && list.map((o) => (
-                  <KitchenTicket key={o.id} order={o} now={now} flash={o.id in flash} pending={pending.has(o.id)} disabled={disabled}
-                    onAdvance={() => run(o, 'advance')} onRevert={() => run(o, 'revert')} onCancel={() => setCancelFor(o)}
-                    onSeen={() => kitchenAction({ type: 'ackChanges', orderId: o.id }).catch(fail)} />
+                  <motion.div key={o.id} layout="position" initial={settled ? { opacity: 0, y: -28 } : false} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 420, damping: 34 }}>
+                    <KitchenTicket order={o} now={now} flash={o.id in flash} pending={pending.has(o.id)} disabled={disabled}
+                      onAdvance={() => run(o, 'advance')} onRevert={() => run(o, 'revert')} onCancel={() => setCancelFor(o)}
+                      onSeen={() => kitchenAction({ type: 'ackChanges', orderId: o.id }).catch(fail)} />
+                  </motion.div>
                 ))}
                 {c.id === 'picked_up' && (
                   <>
@@ -233,13 +240,12 @@ export function Board() {
   )
 }
 
-/** Shown on the New column when nothing is in progress. The poster of the day replaces this in Phase 4. */
+/** Shown on the New column when nothing is in progress: today's poster, large, on the cobalt board. */
 function EmptyBoard() {
   return (
-    <div className="rounded-card border-[3px] border-paper bg-ink p-4 text-center text-paper" aria-live="polite">
-      <div className="flex justify-center [&_svg]:!stroke-paper"><SceneNew size={140} /></div>
-      <p className="m-0 font-display text-display-m">All quiet.</p>
-      <p className="m-0 mt-1 text-body">New orders show up here with a chime.</p>
+    <div aria-live="polite">
+      <Poster poster={posterOfDay(new Date())} variant="full" />
+      <p className="mb-0 mt-3 text-center text-body font-bold">All quiet. New orders show up here with a chime.</p>
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { SceneCancelled, SceneNew, ScenePickedUp, ScenePreparing, SceneReady } f
 import { api, ApiClientError } from '../lib/api'
 import { useCafe } from '../lib/CafeData'
 import { useOrder } from '../lib/hooks'
+import { Poster, posterOfDay } from '../posters/Poster'
 import { rupees, STATUS_COPY, SUGAR_TEXT, time12, tokenLabel } from '../lib/format'
 import { isSoldOut, remainingFor, useCart } from './CartContext'
 import { useRecentOrders } from './RecentOrders'
@@ -124,6 +125,8 @@ function OrderBody({ order }: { order: Order }) {
           </p>
         )}
       </Card>
+
+      {(order.status === 'new' || order.status === 'preparing') && <Poster poster={posterOfDay(new Date())} variant="card" />}
 
       <section aria-label="Items">
         <ul className="m-0 flex list-none flex-col gap-2 p-0">

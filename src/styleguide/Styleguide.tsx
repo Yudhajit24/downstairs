@@ -4,6 +4,7 @@ import {
   Skeleton, SlotChip, Stamp, StatusPill, StatusStepper, Ticket, VegMark, useToast,
   type OrderStatus, type SlotState,
 } from '../design'
+import { Poster, POSTERS } from '../posters/Poster'
 import { CAFE_LOCATION, CAFE_TAGLINE, CAFE_WORDMARK } from '../../shared/constants'
 import {
   HeroScene, ITEM_ILLUSTRATIONS, ItemIllustration, SceneCancelled, SceneNew, ScenePickedUp, ScenePreparing, SceneReady,
@@ -175,6 +176,14 @@ export function Styleguide() {
           ))}
         </div>
         <p className="mt-3 text-micro text-fog">{Object.keys(ITEM_ILLUSTRATIONS).length} of 12 drawn</p>
+      </Section>
+
+      <Section title="Poster of the day">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {POSTERS.map((p) => <Poster key={p.id} poster={p} variant="card" />)}
+        </div>
+        <Label>Strip (menu)</Label>
+        <div className="max-w-[440px]"><Poster poster={POSTERS[0]} variant="strip" /></div>
       </Section>
 
       <Section title="Kitchen · KOT tickets, keypad" dark>

@@ -42,3 +42,11 @@
 - **Four columns need ≥1024px (`lg`); below that they become swipeable tabs** with counts. Picked up is a compact list with a "Back" button (move back) rather than full tickets.
 - **Kitchen UI sets its own text colour inside drawers and sheets** because the board's root is cream-on-cobalt and cream text on cream cards was unreadable.
 - **`npm run reset-demo` wipes orders/slots/counters and reseeds** the menu and settings. Never run it against a live café.
+- **Poster sources are Met Open Access (CC0) heads and busts of mythological figures or anonymous people.** No rulers, named people or anyone recent. The Met retired its v1 search endpoint on 2026-10-01, so discovery used v1.1; the pipeline only needs per-object lookups.
+- **Posters are processed once, committed as WebP, and shipped as static assets** (all under 100 KB at quality 86). `npm run posters` is reproducible; originals are cached in a git-ignored folder.
+- **Accessory positions were measured against a 10% grid per image** and stored as `{ x, y, width, rotate, scaleY? }` in percent of the poster box, so they scale with every placement. Headphones on the narrow bust needed a vertical stretch.
+- **Poster text uses container-query units** so the line stays proportional from a 90px strip to a full card.
+- **Poster of the day = FNV-1a hash of the IST date mod N**, so everyone in the society sees the same one; the greeting uses IST hour bands and only the first name.
+- **`posterOfDay(new Date())` is used where a clock is already ticking elsewhere**, so the poster flips at IST midnight on the next render without extra timers.
+- **Reduced motion:** `MotionConfig reducedMotion="user"` plus the CSS media query. Kitchen tickets slide in only after the board has settled, so opening the board doesn't animate every ticket.
+- **A root error boundary** shows a friendly "Your cart is safe" screen instead of a blank page.

@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CAFE_LOCATION, CAFE_TAGLINE, CAFE_WORDMARK, COPY } from '../../shared/constants'
+import { greeting } from '../../shared/poster'
 import { buildLines } from '../../shared/pricing'
-import { formatTime12, isCafeOpen, nextOpen } from '../../shared/slots'
+import { dateKey, formatTime12, isCafeOpen, nextOpen } from '../../shared/slots'
 import type { Category } from '../../shared/types'
 import { Button, CartBar, Chip, OpenPill, Skeleton, useToast } from '../design'
 import { HeroScene } from '../illustrations'
 import { useCafe, type MenuEntry } from '../lib/CafeData'
 import { useNow } from '../lib/hooks'
 import { rupees, SUGAR_TEXT } from '../lib/format'
+import { loadProfile } from '../lib/storage'
+import { Poster, posterOfDay } from '../posters/Poster'
 import { isSoldOut, remainingFor, useCart } from './CartContext'
 import { ItemRow } from './ItemRow'
 import { ItemSheet } from './ItemSheet'
@@ -43,6 +46,11 @@ export function MenuPage() {
   }, [ready])
 
   const open = settings ? isCafeOpen(settings, now) : true
+  const day = dateKey(now)
+  const poster = useMemo(() => posterOfDay(new Date()), [day]) // eslint-disable-line react-hooks/exhaustive-deps
+  const hello = useMemo(() => greeting(now, loadProfile()?.name), [now.getHours()]) // eslint-disable-line react-hooks/exhaustive-deps
+  // A weather promo (spec section 15) will set this and hide the strip so items stay above the fold.
+  const promoShowing = false
   const blocked = settings ? (!open ? COPY.closed(formatTime12(nextOpen(settings).opensAt)) : settings.paused ? COPY.paused : null) : null
 
   const totals = useMemo(() => buildLines(cart.state.lines, menu), [cart.state.lines, menu])
@@ -79,11 +87,14 @@ export function MenuPage() {
           <div className="-mb-1 w-28 shrink-0"><HeroScene /></div>
         </div>
         <p className="m-0 mt-3 text-body">Order from your flat. Pick up at the Clubhouse counter.</p>
+        <p className="m-0 mt-3 font-display text-[20px] leading-6 text-ink">{hello}</p>
       </header>
 
       <PromoBanner />
 
       <div className="flex flex-col gap-3 px-4">
+        {!open && <Poster poster={poster} variant="full" />}
+        {open && !promoShowing && <Poster poster={poster} variant="strip" />}
         {blocked && <Notice tone="tomato" role="alert">{blocked}</Notice>}
         {soldOutInCart > 0 && (
           <Notice tone="tomato" role="alert">
@@ -101,7 +112,13 @@ export function MenuPage() {
         </div>
       </div>
 
-      {!ready ? (
+      {!ready && error ? (
+        <div className="px-4 pt-8 text-center">
+          <p className="m-0 font-display text-display-m text-ink">Can't reach the café.</p>
+          <p className="mb-4 mt-1 text-body">Check your connection and try again.</p>
+          <Button onClick={() => location.reload()}>Try again</Button>
+        </div>
+      ) : !ready ? (
         <div className="flex flex-col gap-3 px-4 pt-6" aria-busy>
           {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
         </div>

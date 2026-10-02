@@ -105,3 +105,12 @@ body {
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Halftone dot texture over the poster art (spec 3.12). */
+.halftone {
+  background-image: radial-gradient(circle at center, var(--ink-deep) 0 1.1px, transparent 1.6px);
+  background-size: 5px 5px;
+  mix-blend-mode: multiply;
+  opacity: 0.32;
+  pointer-events: none;
+}
