@@ -67,3 +67,7 @@
 - **Poster strip hides when a promo shows or the kitchen is busy.** The spec only said "promo banner"; extending it to rush hour keeps the first item above the fold when it matters. When calm, the poster returns.
 - **The banner is hand-written by the kitchen (Slots drawer, max 80 chars) and wins over the weather line.** It stands in for the "events" idea without a news API or location data.
 - **`settings.banner` is optional** so existing documents don't need a migration; an empty string clears it.
+- **Healthier meals are a "Fit picks" section, not a new category.** Items are tagged `light` (low-calorie, low-sugar) or `protein`; the section collects them across categories (they also stay in their own category), with filters "High protein (15g+)" and "Under 250 kcal". Why: a gym-goer wants to scan one list, but the kitchen's categories (hot/cold/breakfast/bakes) shouldn't change.
+- **Every item carries approximate nutrition (`kcal`, `protein`)**, shown on the row and labelled "approximate". These are estimates for a standard serving, not lab values; the owner should replace them with real figures.
+- **Three new menu items make the section meaningful** (Egg White Wrap, Sprouts & Chickpea Bowl, Banana Peanut Protein Shake), each with an original illustration. The seed menu is now 15 items; `npm run reset-demo` re-seeds it.
+- **Fit chip scrolls with the other chips** (five chips overflow 375px on purpose, so the row reads as scrollable).

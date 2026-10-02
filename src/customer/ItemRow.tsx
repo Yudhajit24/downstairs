@@ -3,6 +3,7 @@ import { ItemIllustration } from '../illustrations'
 import { Button, QtyStepper, Stamp, VegMark } from '../design'
 import type { MenuEntry } from '../lib/CafeData'
 import { rupees } from '../lib/format'
+import { nutritionLine } from '../../shared/nutrition'
 import { isSoldOut, remainingFor, type CartApi } from './CartContext'
 
 export function ItemRow({ item, cart, onOpenOptions }: { item: MenuEntry; cart: CartApi; onOpenOptions: (i: MenuEntry) => void }) {
@@ -23,6 +24,7 @@ export function ItemRow({ item, cart, onOpenOptions }: { item: MenuEntry; cart: 
             <span className="inline-block align-middle"><VegMark veg={item.veg} /></span>
           </h3>
           <p className="m-0 mt-0.5 text-small text-ink-deep/80">{item.description}</p>
+          {item.nutrition && <p className="m-0 mt-0.5 text-micro font-bold tnum text-ink">{nutritionLine(item)}</p>}
           <div className="mt-1 flex items-baseline gap-2">
             <span className="text-body font-bold tnum">{rupees(item.price)}</span>
             {low && !soldOut && <span className="font-script text-script font-bold leading-5 text-tomato-text">only {item.stock} left!</span>}

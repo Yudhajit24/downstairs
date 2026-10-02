@@ -15,6 +15,8 @@ export interface MenuItem {
   illustration: string
   sortOrder: number
   tags: string[]
+  /** Approximate values per serving (estimates, labelled "approx" in the UI). */
+  nutrition?: { kcal: number; protein: number }
 }
 
 export interface CafeSettings {

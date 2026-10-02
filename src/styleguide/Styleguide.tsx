@@ -15,6 +15,7 @@ const ITEMS: [string, string][] = [
   ['cold-coffee', 'Cold Coffee'], ['cold-brew', 'Cold Brew'], ['lemon-iced-tea', 'Lemon Iced Tea'],
   ['kanda-poha', 'Kanda Poha'], ['veg-sandwich', 'Veg Grilled Sandwich'], ['egg-bhurji-pav', 'Egg Bhurji Pav'],
   ['butter-croissant', 'Butter Croissant'], ['banana-bread', 'Banana Walnut Bread'], ['choco-cookie', 'Choco Chip Cookie'],
+  ['egg-white-wrap', 'Egg White Wrap'], ['sprouts-bowl', 'Sprouts & Chickpea Bowl'], ['protein-shake', 'Protein Shake'],
 ]
 
 function Section({ title, children, dark }: { title: string; children: ReactNode; dark?: boolean }) {
@@ -175,7 +176,7 @@ export function Styleguide() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-micro text-fog">{Object.keys(ITEM_ILLUSTRATIONS).length} of 12 drawn</p>
+        <p className="mt-3 text-micro text-fog">{Object.keys(ITEM_ILLUSTRATIONS).length} drawn</p>
       </Section>
 
       <Section title="Poster of the day">

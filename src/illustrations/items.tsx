@@ -123,6 +123,41 @@ export const ChocoCookie = ({ size }: P) => (
   </Ill>
 )
 
+export const EggWhiteWrap = ({ size }: P) => (
+  <Ill size={size} title="Egg white wrap">
+    <g transform="rotate(-32 32 32)">
+      <ellipse cx="51" cy="33" rx="5" ry="10" transform={RISO} {...T} />
+      <path d="M12 22H49A11 11 0 0 1 49 44H12A11 11 0 0 1 12 22Z" fill="var(--paper-raised)" />
+      <path d="M12 22H49A11 11 0 0 1 49 44H12A11 11 0 0 1 12 22Z" />
+      <ellipse cx="51" cy="33" rx="5" ry="10" />
+      <path d="M14 22V44M21 22V44M28 22V44" strokeWidth={1.8} />
+      <path d="M48 28q3 2 0 4t0 4" strokeWidth={1.8} />
+    </g>
+  </Ill>
+)
+
+export const SproutsBowl = ({ size }: P) => (
+  <Ill size={size} title="Sprouts and chickpea bowl">
+    <circle cx="25" cy="31" r="3" transform={RISO} {...T} />
+    <circle cx="38" cy="30" r="3" transform={RISO} {...T} />
+    <path d="M8 36H56Q56 56 32 56Q8 56 8 36Z" />
+    <path d="M20 36q-5-9 2-14M28 36q0-11 7-15M39 36q6-6 3-13M47 36q4-5 2-9" />
+    <path d="M22 22q-3-3-6-1M35 21q3-4 7-3" strokeWidth={1.8} />
+    <circle cx="25" cy="31" r="3" strokeWidth={1.8} />
+    <circle cx="38" cy="30" r="3" strokeWidth={1.8} />
+  </Ill>
+)
+
+export const ProteinShake = ({ size }: P) => (
+  <Ill size={size} title="Protein shake in a shaker bottle">
+    <path d="M27 31L33 22H30L35 12H38L34 21H40L31 33Z" transform={RISO} {...T} />
+    <path d="M22 8H42V15H22Z" />
+    <path d="M20 15H44L41 57H23Z" />
+    <path d="M24 20H40M24 50H41" strokeWidth={1.8} />
+    <path d="M27 31L33 22H30L35 12H38L34 21H40L31 33Z" strokeWidth={1.8} />
+  </Ill>
+)
+
 export const ITEM_ILLUSTRATIONS: Record<string, ComponentType<P>> = {
   'filter-coffee': FilterCoffee,
   'cutting-chai': CuttingChai,
@@ -136,6 +171,9 @@ export const ITEM_ILLUSTRATIONS: Record<string, ComponentType<P>> = {
   'butter-croissant': ButterCroissant,
   'banana-bread': BananaBread,
   'choco-cookie': ChocoCookie,
+  'egg-white-wrap': EggWhiteWrap,
+  'sprouts-bowl': SproutsBowl,
+  'protein-shake': ProteinShake,
 }
 
 export function ItemIllustration({ name, size = 64 }: { name: string; size?: number }) {

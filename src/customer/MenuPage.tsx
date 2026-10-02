@@ -13,6 +13,7 @@ import { rupees, SUGAR_TEXT } from '../lib/format'
 import { loadProfile } from '../lib/storage'
 import { Poster, posterOfDay } from '../posters/Poster'
 import { kitchenLoad, weatherBanner } from '../../shared/suggest'
+import { fitPicks, type FitFilter } from '../../shared/nutrition'
 import { useWeather } from '../lib/weather'
 import { RightNow } from './RightNow'
 import { isSoldOut, remainingFor, useCart } from './CartContext'
@@ -21,8 +22,9 @@ import { ItemSheet } from './ItemSheet'
 import { useRecentOrders } from './RecentOrders'
 import { ActivePill, Dock, Notice, PromoBanner } from './ui'
 
-const CATS: { id: Category; label: string }[] = [
-  { id: 'hot', label: 'Hot' }, { id: 'cold', label: 'Cold' }, { id: 'breakfast', label: 'Breakfast' }, { id: 'bakes', label: 'Bakes' },
+type SectionId = Category | 'fit'
+const CATS: { id: SectionId; label: string }[] = [
+  { id: 'hot', label: 'Hot' }, { id: 'cold', label: 'Cold' }, { id: 'breakfast', label: 'Breakfast' }, { id: 'bakes', label: 'Bakes' }, { id: 'fit', label: 'Fit' },
 ]
 
 export function MenuPage() {
@@ -31,8 +33,9 @@ export function MenuPage() {
   const nav = useNavigate()
   const now = useNow(30_000)
   const [sheetItem, setSheetItem] = useState<MenuEntry | null>(null)
-  const [active, setActive] = useState<Category>('hot')
-  const sectionRefs = useRef<Partial<Record<Category, HTMLElement | null>>>({})
+  const [active, setActive] = useState<SectionId>('hot')
+  const [fitFilter, setFitFilter] = useState<FitFilter>('all')
+  const sectionRefs = useRef<Partial<Record<SectionId, HTMLElement | null>>>({})
 
   // Scroll-spy for the category chips.
   useEffect(() => {
@@ -40,7 +43,7 @@ export function MenuPage() {
     const io = new IntersectionObserver(
       (entries) => {
         const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
-        if (visible) setActive(visible.target.id.replace('cat-', '') as Category)
+        if (visible) setActive(visible.target.id.replace('cat-', '') as SectionId)
       },
       { rootMargin: '-130px 0px -55% 0px' },
     )
@@ -67,7 +70,7 @@ export function MenuPage() {
   }, [cart.state.lines, menu])
   const cartCount = cart.state.lines.reduce((n, l) => n + l.qty, 0)
 
-  const jump = (c: Category) => {
+  const jump = (c: SectionId) => {
     setActive(c)
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     sectionRefs.current[c]?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
@@ -132,14 +135,25 @@ export function MenuPage() {
         </div>
       ) : (
         CATS.map((c) => {
-          const items = menuList.filter((m) => m.category === c.id)
-          if (!items.length) return null
+          const items = c.id === 'fit' ? fitPicks(menuList, fitFilter) : menuList.filter((m) => m.category === c.id)
+          if (c.id !== 'fit' && !items.length) return null
           return (
             <section key={c.id} id={`cat-${c.id}`} ref={(el) => { sectionRefs.current[c.id] = el }} className="scroll-mt-16 px-4 pt-6">
-              <h2 className="m-0 mb-3 font-display text-display-m text-ink">{c.label}</h2>
+              <h2 className="m-0 mb-3 font-display text-display-m text-ink">{c.id === 'fit' ? 'Fit picks' : c.label}</h2>
+              {c.id === 'fit' && (
+                <div className="mb-3">
+                  <p className="m-0 mb-2 text-small">Lighter and high-protein picks. Nutrition is approximate.</p>
+                  <div className="no-scrollbar flex gap-2 overflow-x-auto" role="group" aria-label="Fit filters">
+                    {([['all', 'All'], ['protein', 'High protein (15g+)'], ['light', 'Under 250 kcal']] as const).map(([f, label]) => (
+                      <Chip key={f} active={fitFilter === f} onClick={() => setFitFilter(f)}>{label}</Chip>
+                    ))}
+                  </div>
+                </div>
+              )}
               <ul className="m-0 flex list-none flex-col gap-3 p-0">
                 {items.map((it) => <ItemRow key={it.id} item={it} cart={cart} onOpenOptions={setSheetItem} />)}
               </ul>
+              {c.id === 'fit' && items.length === 0 && <p className="m-0 text-body">Nothing matches that filter right now.</p>}
             </section>
           )
         })
