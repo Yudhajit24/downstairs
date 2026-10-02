@@ -136,7 +136,7 @@ export function Styleguide() {
             </div>
             <Button variant="secondary">Add</Button>
           </Card>
-          <Card className="relative flex items-center gap-3 grayscale [&>*:not(span)]:opacity-60">
+          <Card className="relative flex items-center gap-3 [&>*:not(span)]:grayscale [&>*:not(span)]:opacity-60">
             <ItemIllustration name="cold-brew" />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 font-bold"><span>Cold Brew</span><VegMark veg /></div>
