@@ -6,6 +6,12 @@ Order-ahead web app for a small café inside a residential society (Palm Grove R
 - **Kitchen view** (`/kitchen`, tablet landscape): PIN gate, live KOT board, status changes with undo, cancel with reason, stock and slot controls, pause new orders, chime, wake lock.
 - **Poster of the day:** a daily riso-duotone art card (public-domain busts with pop accessories).
 
+## Live
+
+**https://downstairs-hazel.vercel.app** (customer) · **/kitchen** (PIN gate; the PIN is the `KITCHEN_PIN` env var).
+
+Deploy: `npx vercel deploy --prod`. Set the six env vars first (`vercel env add`); the `VITE_` ones are baked in at build time.
+
 ## Run it locally
 
 ```bash

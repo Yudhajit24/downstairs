@@ -50,3 +50,8 @@
 - **`posterOfDay(new Date())` is used where a clock is already ticking elsewhere**, so the poster flips at IST midnight on the next render without extra timers.
 - **Reduced motion:** `MotionConfig reducedMotion="user"` plus the CSS media query. Kitchen tickets slide in only after the board has settled, so opening the board doesn't animate every ticket.
 - **A root error boundary** shows a friendly "Your cart is safe" screen instead of a blank page.
+- **`firebase-admin` is pinned to 13.x.** v14 pulls `jwks-rsa` 4, which needs the ESM-only `jose` 6; Vercel's function wrapper threw `ERR_REQUIRE_ESM` on every function even on Node 24. v13 uses `jose` 4 (dual-format) and passes the live-check. Revisit when Vercel/`firebase-admin` fix this.
+- **Deployed to the same Firebase project used in development** (one project, so "production" data is the dev data). `npm run reset-demo` would wipe live orders; don't run it once real customers use the app.
+- **The Firebase web API key is set as a public Vercel `config` variable.** Vercel warns about `VITE_*API_KEY`; it is public by design (embedded in every client bundle), unlike the service account and PIN, which are sensitive server-only variables.
+- **Handler tests live in `api/_lib/`**, because Vercel turns every file directly under `api/` into a serverless function. Exactly four functions are deployed.
+- **Kitchen and styleguide are lazy chunks, and Firebase Auth is initialised only in the kitchen code**, so customers never download them. The customer bundle is ~306 KB gzipped (mostly the Firestore SDK).

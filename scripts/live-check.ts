@@ -9,8 +9,9 @@ import { dateKey, nextBookableSlots } from '../shared/slots.js'
 const db = firestoreDb()
 const fs = adminFirestore()
 const now = new Date()
-const slots = nextBookableSlots({ settings: DEFAULT_SETTINGS as never, slots: {}, now, units: 1, limit: 12 })
-const [A, B] = [slots[8].slotId, slots[9].slotId] // an hour or two out; slots that are empty
+const slots = nextBookableSlots({ settings: DEFAULT_SETTINGS as never, slots: {}, now, units: 1, limit: 96 })
+if (slots.length < 2) throw new Error('Need at least two bookable slots left today (run earlier in the day)')
+const [A, B] = [slots.at(-2)!.slotId, slots.at(-1)!.slotId] // the last two slots of the day: empty ones, whatever the hour
 const id = (c: string) => `live${c}`.padEnd(21, 'x')
 const ids = ['1', '2', '3', '4', '5', '6'].map(id)
 const body = (i: number, items: any[], slotId = A) => ({ id: ids[i], customer: { name: 'Live Check', flat: 'T-1' }, items, slotId, note: null })
