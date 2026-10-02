@@ -1,9 +1,8 @@
 import { MotionConfig } from 'motion/react'
-import { Component, useEffect, type ReactNode } from 'react'
+import { Component, lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { ToastProvider } from '../design'
 import { Grain } from '../design'
-import { KitchenPage } from '../kitchen/KitchenPage'
 import { CartProvider } from '../customer/CartContext'
 import { CheckoutPage } from '../customer/CheckoutPage'
 import { OrderPage } from '../customer/OrderPage'
@@ -11,7 +10,6 @@ import { OrdersPage } from '../customer/OrdersPage'
 import { MenuPage } from '../customer/MenuPage'
 import { RecentOrdersProvider } from '../customer/RecentOrders'
 import { CafeDataProvider } from '../lib/CafeData'
-import { Styleguide } from '../styleguide/Styleguide'
 import { CustomerFrame } from './CustomerFrame'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -31,6 +29,10 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
     )
   }
 }
+
+// Kitchen (auth, audio, drawers) and the styleguide are split out so customers never download them.
+const KitchenPage = lazy(() => import('../kitchen/KitchenPage').then((m) => ({ default: m.KitchenPage })))
+const Styleguide = lazy(() => import('../styleguide/Styleguide').then((m) => ({ default: m.Styleguide })))
 
 function Placeholder({ name }: { name: string }) {
   return <p className="p-6 font-display text-display-m text-ink">{name} · coming in a later phase</p>
@@ -68,8 +70,8 @@ export function App() {
       <ToastProvider>
         <GrainGate />
         <Routes>
-          <Route path="/styleguide" element={<Styleguide />} />
-          <Route path="/kitchen/*" element={<KitchenPage />} />
+          <Route path="/styleguide" element={<Suspense fallback={null}><Styleguide /></Suspense>} />
+          <Route path="/kitchen/*" element={<Suspense fallback={<div className="min-h-dvh bg-ink" />}><KitchenPage /></Suspense>} />
           <Route element={<CustomerLayout />}>
             <Route path="/" element={<MenuPage />} />
             <Route path="/cart" element={<CheckoutPage />} />

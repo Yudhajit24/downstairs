@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_SETTINGS } from '../shared/constants.js'
-import { MENU_SEED } from '../shared/menu-seed.js'
-import { memoryDb } from './_lib/memory-db.js'
+import { DEFAULT_SETTINGS } from '../../shared/constants.js'
+import { MENU_SEED } from '../../shared/menu-seed.js'
+import { memoryDb } from './memory-db.js'
 
 // Swap the Firebase admin layer for an in-memory store + a fake auth.
 let db = memoryDb()
-vi.mock('./_lib/admin.js', () => ({
+vi.mock('./admin.js', () => ({
   firestoreDb: () => db,
   adminAuth: () => ({
     createCustomToken: async (_uid: string, claims: object) => `custom:${JSON.stringify(claims)}`,
@@ -18,10 +18,10 @@ vi.mock('./_lib/admin.js', () => ({
   }),
 }))
 
-const { default: createH } = await import('./orders/index.js')
-const { default: patchH } = await import('./orders/[id].js')
-const { default: sessionH } = await import('./kitchen/session.js')
-const { default: actionH } = await import('./kitchen/action.js')
+const { default: createH } = await import('../orders/index.js')
+const { default: patchH } = await import('../orders/[id].js')
+const { default: sessionH } = await import('../kitchen/session.js')
+const { default: actionH } = await import('../kitchen/action.js')
 
 function call(h: (q: VercelRequest, r: VercelResponse) => Promise<void>, opts: { method?: string; body?: unknown; query?: object; auth?: string }) {
   const out = { code: 0, body: undefined as any }

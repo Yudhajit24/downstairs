@@ -1,0 +1,3 @@
+scripts/.poster-cache
+.env*
+*.local

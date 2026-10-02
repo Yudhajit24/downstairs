@@ -1,7 +1,10 @@
-import { onAuthStateChanged, signInWithCustomToken, signOut } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, signInWithCustomToken, signOut } from 'firebase/auth'
 import { useEffect, useState } from 'react'
 import { api, ApiClientError, type KitchenActionBody } from '../lib/api'
-import { auth } from '../lib/firebase'
+import { app } from '../lib/firebase'
+
+// Auth is only needed by the kitchen, so it lives here and stays out of the customer bundle.
+const auth = getAuth(app)
 
 export type StaffState = 'loading' | 'out' | 'in'
 
