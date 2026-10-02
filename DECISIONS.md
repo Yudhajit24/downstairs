@@ -22,3 +22,6 @@
 - **Relative imports use `.js` extensions** so the Vercel ESM runtime resolves them; Vite, Vitest and tsc map them back to `.ts`.
 - **`tsx` (dev dependency) runs `scripts/seed.ts`.** `npm run seed` reads `.env.local`.
 - **PIN check:** both sides hashed with SHA-256 then `timingSafeEqual`; 800 ms delay on a wrong PIN. No rate limiter in the MVP.
+- **Rules are published with `npm run deploy-rules`** (Admin SDK `securityRules()`), not the Firebase CLI: the Admin key can't call the Service Usage API the CLI checks, and this avoids a heavy dependency.
+- **`@opentelemetry/api` is an explicit dependency.** `@google-cloud/firestore` requires it at runtime but doesn't install it; without it `firebase-admin` crashes on import (it was only present by accident).
+- **`npm run live-check`** runs the core scenarios against real Firestore and re-seeds afterwards. Don't run it against a production database with live orders (it resets menu stock and the settings doc).
