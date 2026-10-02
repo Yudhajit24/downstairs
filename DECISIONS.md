@@ -25,3 +25,4 @@
 - **Rules are published with `npm run deploy-rules`** (Admin SDK `securityRules()`), not the Firebase CLI: the Admin key can't call the Service Usage API the CLI checks, and this avoids a heavy dependency.
 - **`@opentelemetry/api` is an explicit dependency.** `@google-cloud/firestore` requires it at runtime but doesn't install it; without it `firebase-admin` crashes on import (it was only present by accident).
 - **`npm run live-check`** runs the core scenarios against real Firestore and re-seeds afterwards. Don't run it against a production database with live orders (it resets menu stock and the settings doc).
+- **`npm run dev` serves `/api/*` itself** via a dev-only Vite plugin (`dev/api-plugin.ts`) that loads the same handler files Vercel runs. Why: `vercel dev` needs an interactive `vercel login` and project link. The `vercel` CLI is installed for Phase 5 deploys; `vercel dev` still works once logged in.
