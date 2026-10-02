@@ -35,3 +35,10 @@
 - **"Open now" replaces "Open till 10 PM" while `forceOpen` is on**, because the 10 PM claim would be wrong at 11 PM in demo mode.
 - **PWA icons are PNGs drawn through the browser canvas** from the cup SVG (no rasteriser installed); includes a maskable variant and `apple-touch-icon`. No service worker.
 - **Time-of-day greeting and poster strip are not built yet**: both belong to the poster work in Phase 4 (spec 3.12).
+- **Kitchen sign-in:** the keypad is 6 digits wide with an explicit Unlock button (the PIN length isn't known client-side). The unlock tap also creates the AudioContext; the wake lock is requested when the board mounts and re-acquired on `visibilitychange`.
+- **Kitchen events come from Firestore `docChanges` after the first load** (new ticket → chime + 3 s tomato flash; customer edit → chime + flash; customer cancel → toast + a different, lower sound). The first snapshot never fires sounds, so opening the board doesn't blare.
+- **Actions are disabled while the board isn't live** (offline or serving cached data) and a mustard banner explains why (matrix row 23).
+- **"Open 24 hours (demo)" toggle lives at the top of the Slots drawer**, next to the thing it affects.
+- **Four columns need ≥1024px (`lg`); below that they become swipeable tabs** with counts. Picked up is a compact list with a "Back" button (move back) rather than full tickets.
+- **Kitchen UI sets its own text colour inside drawers and sheets** because the board's root is cream-on-cobalt and cream text on cream cards was unreadable.
+- **`npm run reset-demo` wipes orders/slots/counters and reseeds** the menu and settings. Never run it against a live café.

@@ -10,7 +10,8 @@
     "test": "vitest run",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "live-check": "tsx --env-file=.env.local scripts/live-check.ts",
-    "deploy-rules": "tsx --env-file=.env.local scripts/deploy-rules.ts"
+    "deploy-rules": "tsx --env-file=.env.local scripts/deploy-rules.ts",
+    "reset-demo": "tsx --env-file=.env.local scripts/reset-demo.ts"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",

@@ -24,7 +24,7 @@ export function Keypad({
         ))}
         <button type="button" className={clsx(key, '!font-sans !text-body font-bold')} onClick={() => onChange('')}>Clear</button>
         <button type="button" className={key} onClick={() => press('0')}>0</button>
-        <button type="button" className={clsx(key, '!font-sans !text-body font-bold')} aria-label="Delete" onClick={() => onChange(value.slice(0, -1))}>⌫</button>
+        <button type="button" className={clsx(key, '!font-sans !text-body font-bold')} onClick={() => onChange(value.slice(0, -1))}>Delete</button>
       </div>
     </div>
   )

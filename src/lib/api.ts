@@ -36,7 +36,18 @@ export interface OrderBody {
   note: string | null
 }
 
+export type KitchenActionBody =
+  | { type: 'advance' | 'revert'; orderId: string; expectedStatus: string }
+  | { type: 'cancel'; orderId: string; reason: string }
+  | { type: 'ackChanges'; orderId: string }
+  | { type: 'setItem'; itemId: string; available?: boolean; stock?: number | null }
+  | { type: 'setSlot'; slotId: string; closed: boolean }
+  | { type: 'setSettings'; paused?: boolean; forceOpen?: boolean }
+
 export const api = {
+  kitchenSession: (pin: string) => request<{ token: string }>('POST', '/api/kitchen/session', { pin }),
+  kitchenAction: (idToken: string, action: KitchenActionBody) =>
+    request<{ noop: boolean; order?: Order }>('POST', '/api/kitchen/action', action, idToken),
   createOrder: (id: string, b: OrderBody) =>
     request<{ order: Order }>('POST', '/api/orders', { id, ...b }),
   editOrder: (id: string, b: Pick<OrderBody, 'items' | 'slotId' | 'note'>) =>
