@@ -42,7 +42,7 @@ export const songOfDay = (now: Date): Song => SONGS[songIndex(dateKey(now), SONG
 export function songLinks(s: Pick<Song, 'title' | 'artist' | 'youtubeId' | 'spotifyId'>) {
   const q = encodeURIComponent(`${s.title} ${s.artist}`)
   return {
-    spotify: s.spotifyId ? `https://open.spotify.com/track/${s.spotifyId}` : `https://open.spotify.com/search/${q}`,
-    youtube: s.youtubeId ? `https://www.youtube.com/watch?v=${s.youtubeId}` : `https://www.youtube.com/results?search_query=${q}`,
+    spotify: s.spotifyId ? `https://open.spotify.com/track/${s.spotifyId}?autoplay=true` : `https://open.spotify.com/search/${q}`,
+    youtube: s.youtubeId ? `https://www.youtube.com/watch?v=${s.youtubeId}&autoplay=1` : `https://www.youtube.com/results?search_query=${q}`,
   }
 }

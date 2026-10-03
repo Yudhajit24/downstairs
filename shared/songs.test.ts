@@ -38,7 +38,7 @@ describe('songOfDay', () => {
 describe('songLinks', () => {
   it('opens the exact track when ids exist, a search otherwise', () => {
     const s = SONGS[0]
-    expect(songLinks(s)).toEqual({ spotify: `https://open.spotify.com/track/${s.spotifyId}`, youtube: `https://www.youtube.com/watch?v=${s.youtubeId}` })
+    expect(songLinks(s)).toEqual({ spotify: `https://open.spotify.com/track/${s.spotifyId}?autoplay=true`, youtube: `https://www.youtube.com/watch?v=${s.youtubeId}&autoplay=1` })
     expect(songLinks({ title: 'x', artist: 'y' }).spotify).toContain('/search/')
   })
   it('builds encoded search links for both services', () => {
