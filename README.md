@@ -51,7 +51,7 @@ All four AI features (`/api/assist`, `/api/parse-order`, `/api/order-chat`, `/ap
 | Variable | Example |
 |---|---|
 | `LLM_BASE_URL` | `https://api.groq.com/openai/v1`, `https://api.together.xyz/v1`, `https://openrouter.ai/api/v1`, or `http://localhost:11434/v1` (Ollama) |
-| `LLM_MODEL` | `llama-3.1-8b-instant` (Groq), `meta-llama/Llama-3.1-8B-Instruct-Turbo` (Together), `llama3.1:8b` (Ollama) |
+| `LLM_MODEL` | `openai/gpt-oss-20b` (Groq; `llama-3.1-8b-instant` was retired there), `meta-llama/Llama-3.1-8B-Instruct-Turbo` (Together), `llama3.1:8b` (Ollama) |
 | `LLM_API_KEY` | the provider's key (not needed for a local Ollama) |
 
 The model's answer is treated as untrusted: only ids of items that are in stock and satisfy the budget and veg constraints in the request survive; reasons are sanitised; any error, timeout or bad JSON falls back to the rules. Requests are rate limited (6/min per IP) and cached for 5 minutes.

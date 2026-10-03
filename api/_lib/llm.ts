@@ -29,6 +29,10 @@ export interface ChatOptions { maxTokens?: number; json?: boolean; timeoutMs?: n
 /** One chat-completions call; returns the assistant text. Throws on any failure so callers can fall back. */
 export async function chat(cfg: LlmConfig, messages: unknown[], fetchImpl: typeof fetch, opts: ChatOptions = {}): Promise<string> {
   const { maxTokens = 350, json = true, timeoutMs = 8000 } = opts
+  // Reasoning models (gpt-oss, Qwen3...) spend tokens thinking before they answer: keep that short and leave headroom,
+  // otherwise the visible reply comes back empty or cut off.
+  const reasoning = /gpt-oss|qwen3|deepseek-r1/i.test(cfg.model)
+  const budget = reasoning ? maxTokens + 700 : maxTokens
   const call = async (withFormat: boolean) => {
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), timeoutMs)
@@ -37,7 +41,8 @@ export async function chat(cfg: LlmConfig, messages: unknown[], fetchImpl: typeo
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(cfg.apiKey && { Authorization: `Bearer ${cfg.apiKey}` }) },
         body: JSON.stringify({
-          model: cfg.model, messages, temperature: 0.2, max_tokens: maxTokens,
+          model: cfg.model, messages, temperature: 0.2, max_tokens: budget,
+          ...(/gpt-oss/i.test(cfg.model) && { reasoning_effort: 'low' }),
           ...(withFormat && { response_format: { type: 'json_object' } }),
         }),
         signal: ctrl.signal,
