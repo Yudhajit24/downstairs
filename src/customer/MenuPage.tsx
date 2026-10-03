@@ -9,12 +9,14 @@ import { Button, CartBar, Chip, OpenPill, Skeleton, useToast } from '../design'
 import { HeroScene } from '../illustrations'
 import { useCafe, type MenuEntry } from '../lib/CafeData'
 import { useNow } from '../lib/hooks'
+import { smoothScrollToElement } from '../lib/smoothScroll'
 import { rupees, SUGAR_TEXT } from '../lib/format'
 import { loadProfile } from '../lib/storage'
 import { Poster, posterOfDay } from '../posters/Poster'
 import { kitchenLoad, weatherBanner } from '../../shared/suggest'
 import { fitPicks, type FitFilter } from '../../shared/nutrition'
 import { useWeather } from '../lib/weather'
+import { songOfDay } from '../../shared/songs'
 import { AskPicks } from './AskPicks'
 import { RightNow } from './RightNow'
 import { isSoldOut, remainingFor, useCart } from './CartContext'
@@ -22,6 +24,7 @@ import { checkLine } from './checkLine'
 import { ItemRow } from './ItemRow'
 import { ItemSheet } from './ItemSheet'
 import { useRecentOrders } from './RecentOrders'
+import { SongStrip } from './SongStrip'
 import { ActivePill, Dock, Notice, PromoBanner } from './ui'
 
 type SectionId = Category | 'fit'
@@ -46,6 +49,11 @@ export function MenuPage() {
       (entries) => {
         const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
         if (visible) setActive(visible.target.id.replace('cat-', '') as SectionId)
+        else {
+          // Above the first section (top of the page): nothing is in the band, so fall back to the first chip.
+          const first = sectionRefs.current[CATS[0].id]
+          if (first && first.getBoundingClientRect().top > 130) setActive(CATS[0].id)
+        }
       },
       { rootMargin: '-130px 0px -55% 0px' },
     )
@@ -62,7 +70,10 @@ export function MenuPage() {
   const promoText = settings?.banner || (weather ? weatherBanner(weather) : null)
   // Rush hour: when the next slots are filling up, drop decoration so items stay above the fold.
   const busy = useMemo(() => (settings ? kitchenLoad({ settings, slots, now }).busy : false), [settings, slots, Math.floor(now.getTime() / 60_000)]) // eslint-disable-line react-hooks/exhaustive-deps
-  const promoShowing = !!promoText || busy
+  const song = useMemo(() => songOfDay(new Date()), [day]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Decoration yields to ordering in a rush; a promo hides only the poster (the song is a one-line strip).
+  const showDaily = open && !busy
+  const showPoster = showDaily && !promoText
   const blocked = settings ? (!open ? COPY.closed(formatTime12(nextOpen(settings).opensAt)) : settings.paused ? COPY.paused : null) : null
 
   const totals = useMemo(() => buildLines(cart.state.lines, menu), [cart.state.lines, menu])
@@ -74,9 +85,20 @@ export function MenuPage() {
 
   const jump = (c: SectionId) => {
     setActive(c)
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    sectionRefs.current[c]?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+    const el = sectionRefs.current[c]
+    if (el) void smoothScrollToElement(el, 64) // 64px = the sticky chip bar
   }
+
+  // Keep the active chip in view (the row scrolls sideways on narrow screens).
+  const chipRefs = useRef<Partial<Record<SectionId, HTMLButtonElement | null>>>({})
+  const chipRow = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const chip = chipRefs.current[active], row = chipRow.current
+    if (!chip || !row) return
+    // Scroll only the chip row sideways: never the page.
+    const target = chip.offsetLeft - (row.clientWidth - chip.clientWidth) / 2
+    row.scrollTo({ left: target, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }, [active])
 
   return (
     <div className="pb-32">
@@ -106,7 +128,12 @@ export function MenuPage() {
 
       <div className="flex flex-col gap-3 px-4">
         {!open && <Poster poster={poster} variant="full" />}
-        {open && !promoShowing && <Poster poster={poster} variant="strip" />}
+        {showDaily && (
+          <div aria-label="Today" className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4">
+            {showPoster && <div className="flex w-[88%] shrink-0 snap-start items-start"><Poster poster={poster} variant="strip" /></div>}
+            <div className={`flex shrink-0 snap-start items-start ${showPoster ? 'w-[88%]' : 'w-full'}`}><SongStrip song={song} /></div>
+          </div>
+        )}
         {blocked && <Notice tone="tomato" role="alert">{blocked}</Notice>}
         {soldOutInCart > 0 && (
           <Notice tone="tomato" role="alert">
@@ -121,8 +148,8 @@ export function MenuPage() {
       </div>
 
       <div className="sticky top-0 z-30 mt-4 border-y-2 border-ink bg-paper px-4 py-2">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar" role="tablist" aria-label="Menu categories">
-          {CATS.map((c) => <Chip key={c.id} active={active === c.id} onClick={() => jump(c.id)} role="tab" aria-selected={active === c.id}>{c.label}</Chip>)}
+        <div ref={chipRow} className="relative flex gap-2 overflow-x-auto no-scrollbar" role="tablist" aria-label="Menu categories">
+          {CATS.map((c) => <Chip key={c.id} ref={(el) => { chipRefs.current[c.id] = el }} active={active === c.id} onClick={() => jump(c.id)} role="tab" aria-selected={active === c.id}>{c.label}</Chip>)}
         </div>
       </div>
 

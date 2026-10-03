@@ -6,5 +6,5 @@ import { devApi } from './dev/api-plugin'
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), devApi()],
-  test: { environment: 'node', include: ['shared/**/*.test.ts', 'api/**/*.test.ts'] },
+  test: { environment: 'node', include: ['shared/**/*.test.ts', 'api/**/*.test.ts', 'src/lib/**/*.test.ts'] },
 })

@@ -9,8 +9,6 @@ import { api, ApiClientError } from '../lib/api'
 import { useCafe } from '../lib/CafeData'
 import { useOrder } from '../lib/hooks'
 import { Poster, posterOfDay } from '../posters/Poster'
-import { songOfDay } from '../../shared/songs'
-import { SongCard } from './SongCard'
 import { rupees, STATUS_COPY, SUGAR_TEXT, time12, tokenLabel } from '../lib/format'
 import { remainingFor, useCart, type CartLine } from './CartContext'
 import { checkLine } from './checkLine'
@@ -131,12 +129,7 @@ function OrderBody({ order }: { order: Order }) {
         )}
       </Card>
 
-      {(order.status === 'new' || order.status === 'preparing') && (
-        <>
-          <Poster poster={posterOfDay(new Date())} variant="card" />
-          <SongCard song={songOfDay(new Date())} />
-        </>
-      )}
+      {(order.status === 'new' || order.status === 'preparing') && <Poster poster={posterOfDay(new Date())} variant="card" />}
 
       <section aria-label="Items">
         <ul className="m-0 flex list-none flex-col gap-2 p-0">

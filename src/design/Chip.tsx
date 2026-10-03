@@ -1,12 +1,13 @@
 import clsx from 'clsx'
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 
 /** Category / filter chip. Active chips get the hard shadow. */
-export function Chip({
+export const Chip = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }>(function Chip({
   active, className, children, ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+}, ref) {
   return (
     <button
+      ref={ref}
       {...rest}
       aria-pressed={active}
       className={clsx(
@@ -18,7 +19,7 @@ export function Chip({
       {children}
     </button>
   )
-}
+})
 
 export type SlotState = 'open' | 'few' | 'full' | 'past' | 'closed'
 
