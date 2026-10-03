@@ -5,7 +5,7 @@ Order-ahead web app for a small café inside a residential society (Palm Grove R
 - **Customer view** (mobile-first): menu, cart, sugar options, pickup slots with capacity, place order, live status, edit/cancel while New, recent orders, reorder.
 - **Kitchen view** (`/kitchen`, tablet landscape): PIN gate, live KOT board, status changes with undo, cancel with reason, stock and slot controls, pause new orders, chime, wake lock.
 - **Poster of the day:** a daily riso-duotone art card (public-domain busts with pop accessories).
-- **Song of the day:** a daily track on the menu's "today" row, next to the poster (swipe sideways). One song for the whole society per IST day; tap it to open the card with Spotify and YouTube links.
+- **Song of the day:** a daily track in a slim bar pinned at the very top of the menu, always visible. One song for the whole society per IST day; tap it to open the card with Spotify and YouTube links.
 - **Shareable order templates:** share any cart or order as a `/t/<id>` link that drops the same items into a friend's cart.
 - **"Right now" suggestions:** picks from the weather (Open-Meteo), the time of day and how full the next pickup slots are. When the kitchen is busy it leads with grab-and-go bakes.
 - **Fit picks:** a healthier section (light and high-protein) with approximate nutrition and filters.

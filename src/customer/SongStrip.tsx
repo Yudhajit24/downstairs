@@ -20,9 +20,9 @@ function Record({ size }: { size: number }) {
 const link = 'press inline-flex min-h-14 flex-1 items-center justify-center rounded-btn border-2 px-4 text-body font-bold no-underline'
 
 /**
- * Song of the day for the menu: a compact strip (same height family as the poster strip, so the first menu item stays
- * above the fold). Tap it for the full card with our blurb and the Spotify / YouTube links.
- * We link out only: no audio hosted, no embed, no lyrics.
+ * Song of the day: a slim bar pinned at the very top of the menu, always visible (never hidden by rush hour, a promo or
+ * closing time, and not tucked into a carousel). One line of text plus a Listen pill; tap it for the full card with our
+ * blurb and the Spotify / YouTube links. We link out only: no audio hosted, no embed, no lyrics.
  */
 export function SongStrip({ song, className }: { song: Song; className?: string }) {
   const [open, setOpen] = useState(false)
@@ -31,15 +31,14 @@ export function SongStrip({ song, className }: { song: Song; className?: string 
     <>
       <button
         type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label={`Song of the day: ${song.title} by ${song.artist}. Tap to listen.`}
-        className={clsx('flex min-h-[88px] w-full items-center gap-3 rounded-card border-2 border-ink bg-paper-raised p-3 text-left cursor-pointer', className)}
+        className={clsx('flex min-h-14 w-full items-center gap-3 border-0 border-b-2 border-ink bg-paper-raised px-4 py-1.5 text-left cursor-pointer', className)}
       >
-        <Record size={52} />
+        <Record size={36} />
         <span className="min-w-0 flex-1">
-          <span className="block font-script text-[18px] font-bold leading-4 text-tomato-text">song of the day</span>
-          <span className="line-clamp-2 block font-display text-[15px] leading-[18px] text-ink">{song.title}</span>
-          <span className="block truncate text-micro text-ink-deep/80">{song.artist}</span>
+          <span className="block truncate font-display text-[15px] leading-5 text-ink">{song.title}</span>
+          <span className="block truncate text-micro text-ink-deep/80"><span className="font-script text-[15px] font-bold text-tomato-text">song of the day</span> · {song.artist}</span>
         </span>
-        <span aria-hidden className="shrink-0 rounded-full border-2 border-ink bg-ink px-3 py-1.5 text-small font-bold text-paper-raised">Listen</span>
+        <span aria-hidden className="shrink-0 rounded-full border-2 border-ink bg-ink px-3 py-1 text-small font-bold text-paper-raised">Listen</span>
       </button>
 
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Song of the day">

@@ -71,9 +71,8 @@ export function MenuPage() {
   // Rush hour: when the next slots are filling up, drop decoration so items stay above the fold.
   const busy = useMemo(() => (settings ? kitchenLoad({ settings, slots, now }).busy : false), [settings, slots, Math.floor(now.getTime() / 60_000)]) // eslint-disable-line react-hooks/exhaustive-deps
   const song = useMemo(() => songOfDay(new Date()), [day]) // eslint-disable-line react-hooks/exhaustive-deps
-  // Decoration yields to ordering in a rush; a promo hides only the poster (the song is a one-line strip).
-  const showDaily = open && !busy
-  const showPoster = showDaily && !promoText
+  // The poster yields to ordering (rush hour, or a promo banner). The song bar does NOT: it is always on top.
+  const showPoster = open && !busy && !promoText
   const blocked = settings ? (!open ? COPY.closed(formatTime12(nextOpen(settings).opensAt)) : settings.paused ? COPY.paused : null) : null
 
   const totals = useMemo(() => buildLines(cart.state.lines, menu), [cart.state.lines, menu])
@@ -102,7 +101,8 @@ export function MenuPage() {
 
   return (
     <div className="pb-32">
-      <header className="px-4 pb-4 pt-6">
+      <SongStrip song={song} />
+      <header className="px-4 pb-4 pt-5">
         <h1 className="m-0 font-display text-display-xl text-ink">{CAFE_WORDMARK}</h1>
         <div className="mt-1 flex items-end justify-between gap-2">
           <div className="min-w-0">
@@ -128,12 +128,7 @@ export function MenuPage() {
 
       <div className="flex flex-col gap-3 px-4">
         {!open && <Poster poster={poster} variant="full" />}
-        {showDaily && (
-          <div aria-label="Today" className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4">
-            {showPoster && <div className="flex w-[88%] shrink-0 snap-start items-start"><Poster poster={poster} variant="strip" /></div>}
-            <div className={`flex shrink-0 snap-start items-start ${showPoster ? 'w-[88%]' : 'w-full'}`}><SongStrip song={song} /></div>
-          </div>
-        )}
+        {showPoster && <Poster poster={poster} variant="strip" />}
         {blocked && <Notice tone="tomato" role="alert">{blocked}</Notice>}
         {soldOutInCart > 0 && (
           <Notice tone="tomato" role="alert">
