@@ -1,103 +1,50 @@
 # Downstairs
 
-Order-ahead web app for a small café inside a residential society (Palm Grove Residency, Bengaluru). Residents order from their flat, pick a pickup slot and track the order live; the kitchen runs a live board on a tablet.
+Order-ahead for a small café inside a residential society (Palm Grove Residency, Bengaluru). Residents order from their flat and pick up without waiting; the kitchen runs a live board on a tablet.
 
-- **Customer view** (mobile-first): menu, cart, sugar options, pickup slots with capacity, place order, live status, edit/cancel while New, recent orders, reorder.
-- **Kitchen view** (`/kitchen`, tablet landscape): PIN gate, live KOT board, status changes with undo, cancel with reason, stock and slot controls, pause new orders, chime, wake lock.
-- **Poster of the day:** a daily riso-duotone art card (public-domain busts with pop accessories).
-- **Song of the day:** a daily track in a slim bar pinned at the very top of the menu, always visible. One song for the whole society per IST day; tap it to open the card, then open the exact track on Spotify or YouTube to play it there.
-- **Shareable order templates:** share any cart or order as a `/t/<id>` link that drops the same items into a friend's cart.
-- **"Right now" suggestions:** picks from the weather (Open-Meteo), the time of day and how full the next pickup slots are. When the kitchen is busy it leads with grab-and-go bakes.
-- **Fit picks:** a healthier section (light and high-protein) with approximate nutrition and filters.
-- **Build Your Sandwich:** Subway-style customisation (bread, fillings, extras, sauce) with live pricing, min/max rules and ingredient availability the kitchen can switch off.
-- **Ask for a pick (AI):** free-text suggestions, answered by an open-source LLM when configured and by a rule engine otherwise.
-- **Paste an order (AI):** paste a WhatsApp-style message ("2 cappuccinos, less sugar, and a veg sandwich"); it becomes cart lines to review and add.
-- **Ask about your order (AI):** on the status page, ask "how long?", "can I cancel?" and get an answer from the order's own data.
-- **Shift brief (AI, kitchen):** a "Brief me" button in the kitchen Tools drawer summarises live orders and stock into a few lines.
-- **Weather chip with demo control:** shows the live weather the menu follows, and in demo mode lets you simulate rain, heat or chill to see the picks react.
+- **Live:** https://downstairs-hazel.vercel.app (customer) · `/kitchen` (staff board, PIN shared separately)
+- **Repo:** https://github.com/Yudhajit24/downstairs
+- **Demo mode** is on: the café is "open" at any hour, and a Demo row on the menu simulates rain, heat or chill.
 
-## Live
+## What it does
 
-**https://downstairs-hazel.vercel.app** (customer) · **/kitchen** (PIN gate; the PIN is the `KITCHEN_PIN` env var).
+**Customer (mobile-first):** menu in categories, cart, sugar options, a build-your-own sandwich, pickup slots with real capacity, name and flat, then a live order status. Edit or cancel while the order is still New; reorder; share a cart as a link.
 
-Deploy: `npx vercel deploy --prod`. Set the six env vars first (`vercel env add`); the `VITE_` ones are baked in at build time.
+**Kitchen (tablet):** live board New → Preparing → Ready → Picked up with undo, cancel with reason, stock and per-ingredient switches, slot open/close, pause orders, chime and wake lock.
 
-## Run it locally
+**AI (four features, one open-weights model, each with a no-AI fallback):**
+- *Ask for a pick:* "something light under ₹150" → up to three items with a reason.
+- *Paste an order:* a WhatsApp-style message becomes cart lines to review. It never places the order.
+- *Ask about your order:* "how long?", "can I still cancel?" on the status page.
+- *Shift brief (kitchen):* what to make first, what is due next, what is running low.
 
-```bash
-npm install
-cp .env.example .env.local     # fill in the values (see below)
-npm run seed                   # menu + settings (forceOpen: true)
-npm run dev                    # frontend + /api together at http://localhost:5173
-npm test                       # Vitest
-```
+**Live integration:** Open-Meteo weather (no key) shapes the banner, the "Right now" row and the AI picks, together with the time of day and how full the next slots are. If the API is slow or down, those parts quietly drop out and the app works as normal.
 
-`npm run dev` serves `/api/*` from the same handler files Vercel runs (a dev-only Vite plugin), so no `vercel login` is needed. `vercel dev` also works once you are logged in.
+## Product decisions, and why
 
-Open `/styleguide` for every design primitive and illustration.
+- **Capacity counts prep effort, not orders.** Each item has prep units and a slot holds 16, so four coffees and one sandwich are not the same load. Full slots show as full and offer the next free one.
+- **The server owns every rule.** Prices, stock, slot capacity and the daily token are checked and changed in one transaction, so two people cannot both take the last croissant or the last slot. Orders carry a client-made id, so a dropped connection and a retry never creates a duplicate.
+- **Edits are allowed only while an order is New.** Once the kitchen starts, changing it would waste food, so the screen says so and points to the counter. The kitchen sees a flash and a change list whenever a customer edits.
+- **AI is never trusted with anything that matters.** Code computes the facts and enforces budget, veg, stock and price. The model only chooses and phrases. Its output is checked against the real menu, and any failure falls back to a rule engine that always answers.
+- **Weather you can demo.** Real weather cannot be summoned on request, so demo mode adds a simulate switch that drives the same code path.
+- **Custom design, not a template:** a tactile riso-print look with a custom palette, hand-drawn illustrations, and a poster and song of the day for personality.
 
-### Environment
+Every decision with its reason is in [DECISIONS.md](DECISIONS.md).
 
-| Variable | Where | Notes |
-|---|---|---|
-| `VITE_FIREBASE_*` | client | **Public by design.** The Firebase web config identifies the project; it is not a secret. Security comes from Firestore rules and server-side writes. |
-| `FIREBASE_SERVICE_ACCOUNT_BASE64` | server only | base64 of the service-account JSON. Never `VITE_`-prefixed. |
-| `KITCHEN_PIN` | server only | 4–6 digits. Compared in constant time; wrong guesses are delayed. |
+## What was hard
 
-### AI features: connect an open-source LLM (optional)
+- **Concurrency and the real-world cases:** sold-out mid-checkout, full slots, edits racing the kitchen, double taps. This took most of the care, and about 220 tests cover it.
+- **Keeping the model honest:** models can invent items or return broken JSON (both are handled and tested), the first hosted model we picked was retired by the provider, and the reasoning model we ended on spent its whole token budget thinking and returned empty replies until I capped its effort. Validation plus fallbacks keeps all of that invisible to users.
+- **A serverless gotcha:** a dependency upgrade made every function crash on Vercel until it was pinned back.
 
-All four AI features (`/api/assist`, `/api/parse-order`, `/api/order-chat`, `/api/kitchen/brief`) share these variables and each works with **no configuration** (a tested rule engine answers). To use a model, set three server-only env vars for any **OpenAI-compatible** chat-completions endpoint:
+## What I would build next
 
-| Variable | Example |
-|---|---|
-| `LLM_BASE_URL` | `https://api.groq.com/openai/v1`, `https://api.together.xyz/v1`, `https://openrouter.ai/api/v1`, or `http://localhost:11434/v1` (Ollama) |
-| `LLM_MODEL` | `openai/gpt-oss-20b` (Groq; `llama-3.1-8b-instant` was retired there), `meta-llama/Llama-3.1-8B-Instruct-Turbo` (Together), `llama3.1:8b` (Ollama) |
-| `LLM_API_KEY` | the provider's key (not needed for a local Ollama) |
+1. Test on real hardware: the chime, vibrate and wake lock were only checked in the browser, and the kitchen tablet was not tested.
+2. Real customer sign-in. Today anyone with an order link can read that order.
+3. Proper rate limits (they are in-memory now) and a retry limit on the PIN screen.
+4. A "ready" push notification, so customers do not need to watch the screen.
+5. UPI payment, and end-to-end and accessibility tests.
 
-The model's answer is treated as untrusted: only ids of items that are in stock and satisfy the budget and veg constraints in the request survive; reasons are sanitised; any error, timeout or bad JSON falls back to the rules. Requests are rate limited (6/min per IP) and cached for 5 minutes.
+## Honest trade-offs
 
-**Deploying:** a Vercel function cannot reach `localhost`, so for production use a hosted provider (or a tunnel to your own Ollama). Add the three variables with `vercel env add`.
-
-### Scripts
-
-| Script | What it does |
-|---|---|
-| `npm run seed` | Writes the menu and `settings/cafe` (`forceOpen: true`). Overwrites menu stock. |
-| `npm run deploy-rules` | Publishes `firestore.rules` via the Admin SDK. |
-| `npm run live-check` | Runs the core scenarios against **real** Firestore, then re-seeds. |
-| `npm run reset-demo` | Wipes orders, slots and counters and reseeds. **Destructive.** |
-| `npm run posters` | Rebuilds the poster images from the Met's open-access collection. |
-
-## Demo mode
-
-`settings.forceOpen` is **on** in the seed so a reviewer can order at any hour. It also widens the slot grid to the whole day. Toggle it in the kitchen: **Slots → Open 24 hours (demo)**. With it off the café is open 07:00–22:00 IST.
-
-## How it is built
-
-- Vite, React, TypeScript, React Router, Tailwind v4 (custom tokens only), `motion`, Zod, `date-fns` + `@date-fns/tz`.
-- **Reads** are live Firestore listeners from the browser. **Writes** go only through four Vercel functions using `firebase-admin`, so every rule runs inside a Firestore transaction on the server:
-  `POST /api/orders` · `PATCH /api/orders/[id]` · `POST /api/kitchen/session` · `POST /api/kitchen/action` (plus read-only `/api/weather`, `/api/assist`, `/api/parse-order`, `/api/order-chat`, `/api/kitchen/brief` and `/api/templates`)
-- Shared code (`/shared`): types, Zod schemas, slot math (IST), pricing, status machine, ticket timing, poster pick.
-- Business logic runs on a small `Db`/`Tx` interface, with Firestore in production and an in-memory store in unit tests.
-- Capacity is counted in prep units; stock, slot units and the daily token counter change in the same transaction as the order.
-
-See [DECISIONS.md](DECISIONS.md) for every notable product and technical decision and why, and [HANDOFF.md](HANDOFF.md) for a fresh-session briefing (state, commands, gotchas, open items).
-
-## Security notes and known trade-offs
-
-- Anyone holding an order link can read that order (name and flat). Ids are 21-character nanoids, which are unguessable; this is acceptable for an MVP inside one society. Real customer auth would fix it.
-- The kitchen signs in with a PIN exchanged server-side for a Firebase custom token carrying `staff: true`. There is no rate limiter beyond a short delay on wrong PINs.
-- Firestore rules: public read for menu, settings and slots; order `get` is public by id, `list` needs the staff claim; every write is denied from clients.
-
-## Testing
-
-- `npm test`: slot math (IST, lead time, cart-relative capacity, closed slots, `forceOpen`), status transitions, pricing and diffs, ticket timing, poster pick and greeting, the order transactions (create, sold out, slot full, idempotent retry, races, edit, locked edit, cancel, kitchen actions) and the HTTP handlers.
-- `npm run live-check`: the same core scenarios against real Firestore.
-
-## Credits
-
-- **Poster artwork:** public-domain objects from [The Metropolitan Museum of Art Open Access](https://www.metmuseum.org/about-the-met/policies-and-documents/open-access) (CC0 1.0), cropped and recoloured to a duotone. Each poster's object, source URL and licence are recorded in `src/posters/posters.json`. Objects: Marble head of Athena (248642), Marble head of a god, probably Dionysos (251347), Marble head of a youth (248901, 255422, 248311, 250744), Marble head of a woman (254639, 250655), Marble bust of a man (248722, 251198), Terracotta head of Dionysos (248106), Marble head of Athena, the so-called Athena Medici (258077), Marble head of Aphrodite? (251515).
-- Pop accessories (sunglasses, headphones, chai glass, steam) and all item and scene illustrations are original.
-- Fonts via Fontsource: Bowlby One, Caveat, DM Sans, Space Mono (all OFL).
-- **Song of the day:** a short list of well-known tracks in `shared/songs.ts`. The buttons open the exact track on Spotify and YouTube (IDs in the same file), so it plays there. We host no audio and quote no lyrics. The one-line blurbs are our own.
-- Open Peeps (Pablo Stanley, CC0) is not used; the scene figures are original line drawings.
+Dev and production share one database. The nutrition figures are estimates. The AI runs on a hosted open model (Groq), so it needs that key and a network. Setup, scripts and architecture are in [docs/TECHNICAL.md](docs/TECHNICAL.md); [HANDOFF.md](HANDOFF.md) is the current state and open items.

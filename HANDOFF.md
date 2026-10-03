@@ -1,6 +1,6 @@
 # Downstairs: handoff
 
-A self-contained briefing for picking this project up in a fresh session (human or AI). Pair it with `README.md` (how to run) and `DECISIONS.md` (every notable decision and why). It contains no secrets.
+A self-contained briefing for picking this project up in a fresh session (human or AI). Pair it with `README.md` (one-page overview), `docs/TECHNICAL.md` (how to run, env, scripts) and `DECISIONS.md` (every notable decision and why). It contains no secrets.
 
 You are continuing work on **Downstairs**, an order-ahead web app for a small café inside a residential society (Palm Grove Residency, Bengaluru). It was built and extended over a long session; everything below is the verified state at handoff.
 
