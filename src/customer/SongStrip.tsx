@@ -22,13 +22,11 @@ const link = 'press inline-flex min-h-14 flex-1 items-center justify-center roun
 /**
  * Song of the day: a slim bar pinned at the very top of the menu, always visible (never hidden by rush hour, a promo or
  * closing time, and not tucked into a carousel). One line of text plus a Listen pill; tap it for the full card with our
- * blurb, a Play button (YouTube's own embedded player, mounted only after the tap) and Spotify / YouTube links. No audio hosted, no lyrics.
+ * blurb and buttons that open the exact track on Spotify or YouTube, where it plays. We link out only: no audio hosted, no embed, no lyrics.
  */
 export function SongStrip({ song, className }: { song: Song; className?: string }) {
   const [open, setOpen] = useState(false)
-  const [playing, setPlaying] = useState(false)
   const l = songLinks(song)
-  const close = () => { setOpen(false); setPlaying(false) } // unmounting the player stops the music
   return (
     <>
       <button
@@ -43,7 +41,7 @@ export function SongStrip({ song, className }: { song: Song; className?: string 
         <span aria-hidden className="shrink-0 rounded-full border-2 border-ink bg-ink px-3 py-1 text-small font-bold text-paper-raised">Listen</span>
       </button>
 
-      <BottomSheet open={open} onClose={close} title="Song of the day">
+      <BottomSheet open={open} onClose={() => setOpen(false)} title="Song of the day">
         <div className="flex items-center gap-4">
           <Record size={84} />
           <div className="min-w-0">
@@ -52,22 +50,10 @@ export function SongStrip({ song, className }: { song: Song; className?: string 
             <p className="m-0 text-small text-ink-deep/80">{song.artist}</p>
           </div>
         </div>
-        <p className="mb-3 mt-3 text-body">{song.line}</p>
-        {l.embed && (playing ? (
-          <div className="mb-3 aspect-video w-full overflow-hidden rounded-btn border-2 border-ink bg-ink-deep">
-            <iframe
-              src={l.embed} title={`${song.title} by ${song.artist}`} className="h-full w-full border-0"
-              allow="autoplay; encrypted-media; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen
-            />
-          </div>
-        ) : (
-          <button type="button" onClick={() => setPlaying(true)} className={`${link} mb-3 w-full border-ink bg-tomato text-paper-raised cursor-pointer`}>
-            ▶ Play here
-          </button>
-        ))}
+        <p className="mb-4 mt-3 text-body">{song.line}</p>
         <div className="flex gap-2">
           <a className={`${link} border-ink bg-ink text-paper-raised`} href={l.spotify} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${song.title} on Spotify (opens in a new tab)`}>Spotify</a>
-          <a className={`${link} border-ink bg-paper-raised text-ink`} href={l.youtube} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${song.title} on YouTube (opens in a new tab)`}>Open YouTube</a>
+          <a className={`${link} border-ink bg-paper-raised text-ink`} href={l.youtube} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${song.title} on YouTube (opens in a new tab)`}>YouTube</a>
         </div>
       </BottomSheet>
     </>

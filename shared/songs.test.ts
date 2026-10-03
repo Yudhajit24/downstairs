@@ -12,14 +12,11 @@ describe('song data', () => {
     }
     expect(SONGS.length).toBeGreaterThanOrEqual(12)
   })
-  it('every song has a plausible YouTube id, and embed/link URLs use it', () => {
+  it('every song has plausible YouTube and Spotify ids', () => {
     for (const s of SONGS) {
       expect(s.youtubeId, s.id).toMatch(/^[\w-]{11}$/)
-      const l = songLinks(s)
-      expect(l.embed).toContain(`/embed/${s.youtubeId}?autoplay=1`)
-      expect(l.youtube).toBe(`https://www.youtube.com/watch?v=${s.youtubeId}`)
+      expect(s.spotifyId, s.id).toMatch(/^[A-Za-z0-9]{22}$/)
     }
-    expect(songLinks({ title: 'x', artist: 'y' }).embed).toBeNull()
   })
 })
 
@@ -39,6 +36,11 @@ describe('songOfDay', () => {
 })
 
 describe('songLinks', () => {
+  it('opens the exact track when ids exist, a search otherwise', () => {
+    const s = SONGS[0]
+    expect(songLinks(s)).toEqual({ spotify: `https://open.spotify.com/track/${s.spotifyId}`, youtube: `https://www.youtube.com/watch?v=${s.youtubeId}` })
+    expect(songLinks({ title: 'x', artist: 'y' }).spotify).toContain('/search/')
+  })
   it('builds encoded search links for both services', () => {
     const l = songLinks({ title: "Don't Stop Me Now", artist: 'Queen' })
     expect(l.spotify).toBe(`https://open.spotify.com/search/${encodeURIComponent("Don't Stop Me Now Queen")}`)
