@@ -12,6 +12,15 @@ describe('song data', () => {
     }
     expect(SONGS.length).toBeGreaterThanOrEqual(12)
   })
+  it('every song has a plausible YouTube id, and embed/link URLs use it', () => {
+    for (const s of SONGS) {
+      expect(s.youtubeId, s.id).toMatch(/^[\w-]{11}$/)
+      const l = songLinks(s)
+      expect(l.embed).toContain(`/embed/${s.youtubeId}?autoplay=1`)
+      expect(l.youtube).toBe(`https://www.youtube.com/watch?v=${s.youtubeId}`)
+    }
+    expect(songLinks({ title: 'x', artist: 'y' }).embed).toBeNull()
+  })
 })
 
 describe('songOfDay', () => {
