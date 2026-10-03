@@ -20,8 +20,8 @@ export function devApi(): Plugin {
         let file: string | null = null
         if (parts[0] === 'orders' && parts.length === 1) file = '/api/orders/index.ts'
         else if (parts[0] === 'orders' && parts.length === 2) { file = '/api/orders/[id].ts'; query.id = parts[1] }
-        else if (parts[0] === 'kitchen' && ['session', 'action'].includes(parts[1])) file = `/api/kitchen/${parts[1]}.ts`
-        else if (parts.length === 1 && ['templates', 'weather', 'assist'].includes(parts[0])) file = `/api/${parts[0]}/index.ts`
+        else if (parts[0] === 'kitchen' && ['session', 'action', 'brief'].includes(parts[1])) file = `/api/kitchen/${parts[1]}.ts`
+        else if (parts.length === 1 && ['templates', 'weather', 'assist', 'parse-order', 'order-chat'].includes(parts[0])) file = `/api/${parts[0]}/index.ts`
         const send = (code: number, body: unknown) => {
           res.statusCode = code
           res.setHeader('Content-Type', 'application/json')

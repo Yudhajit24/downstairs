@@ -13,11 +13,13 @@ import { smoothScrollToElement } from '../lib/smoothScroll'
 import { rupees, SUGAR_TEXT } from '../lib/format'
 import { loadProfile } from '../lib/storage'
 import { Poster, posterOfDay } from '../posters/Poster'
-import { kitchenLoad, weatherBanner } from '../../shared/suggest'
+import { kitchenLoad, weatherBanner, WEATHER_SIMS, type WeatherSim } from '../../shared/suggest'
 import { fitPicks, type FitFilter } from '../../shared/nutrition'
 import { useWeather } from '../lib/weather'
 import { songOfDay } from '../../shared/songs'
 import { AskPicks } from './AskPicks'
+import { PasteOrder } from './PasteOrder'
+import { WeatherChip } from './WeatherChip'
 import { RightNow } from './RightNow'
 import { isSoldOut, remainingFor, useCart } from './CartContext'
 import { checkLine } from './checkLine'
@@ -66,7 +68,11 @@ export function MenuPage() {
   const poster = useMemo(() => posterOfDay(new Date()), [day]) // eslint-disable-line react-hooks/exhaustive-deps
   const hello = useMemo(() => greeting(now, loadProfile()?.name), [now.getHours()]) // eslint-disable-line react-hooks/exhaustive-deps
   // A promo (the kitchen's own banner, else notable weather) hides the poster strip so items stay above the fold.
-  const weather = useWeather()
+  const liveWeather = useWeather()
+  // Demo switch (only offered in demo mode): pretend it is raining / hot / chilly so the weather-aware parts can be shown on demand.
+  const [sim, setSim] = useState<WeatherSim | null>(null)
+  const demo = !!settings?.forceOpen
+  const weather = demo && sim ? WEATHER_SIMS[sim] : liveWeather
   const promoText = settings?.banner || (weather ? weatherBanner(weather) : null)
   // Rush hour: when the next slots are filling up, drop decoration so items stay above the fold.
   const busy = useMemo(() => (settings ? kitchenLoad({ settings, slots, now }).busy : false), [settings, slots, Math.floor(now.getTime() / 60_000)]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -138,8 +144,10 @@ export function MenuPage() {
         )}
         {error && <Notice tone="tomato" role="alert">Can't reach the café right now. Showing what we have.</Notice>}
         <UsualCard />
+        {open && <WeatherChip live={liveWeather} sim={demo ? sim : null} onSim={setSim} demo={demo} />}
         {open && <RightNow now={now} weather={weather} busy={busy} />}
-        {open && <AskPicks />}
+        {open && <AskPicks simulate={demo ? sim : null} />}
+        {open && <PasteOrder />}
       </div>
 
       <div className="sticky top-0 z-30 mt-4 border-y-2 border-ink bg-paper px-4 py-2">

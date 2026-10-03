@@ -18,6 +18,25 @@ export function weatherMood(w: WeatherNow): Mood {
   return 'mild'
 }
 
+/** Demo control: pretend the weather is something else, so the weather-aware features can be shown on demand. */
+export type WeatherSim = 'rain' | 'hot' | 'cool'
+export const WEATHER_SIMS: Record<WeatherSim, WeatherNow> = {
+  rain: { tempC: 24, precipMm: 2.4, code: 63 },
+  hot: { tempC: 36, precipMm: 0, code: 0 },
+  cool: { tempC: 17, precipMm: 0, code: 3 },
+}
+
+/** Human label for the weather chip, e.g. "Rain · 24°C". */
+export function weatherLabel(w: WeatherNow): string {
+  const t = `${Math.round(w.tempC)}°C`
+  switch (weatherMood(w)) {
+    case 'rainy': return `Rain · ${t}`
+    case 'hot': return `Hot · ${t}`
+    case 'cool': return `Chilly · ${t}`
+    default: return `Pleasant · ${t}`
+  }
+}
+
 /** A short banner line, only when the weather is worth a mention (otherwise null, and no banner shows). */
 export function weatherBanner(w: WeatherNow): string | null {
   switch (weatherMood(w)) {

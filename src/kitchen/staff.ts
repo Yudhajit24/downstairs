@@ -37,3 +37,15 @@ export async function kitchenAction(action: KitchenActionBody) {
     throw e
   }
 }
+
+/** AI briefing of today's live orders. Same sign-in handling as actions. */
+export async function kitchenBrief() {
+  const user = auth.currentUser
+  if (!user) throw new ApiClientError('UNAUTHORIZED', 'Kitchen sign-in required.', 401)
+  try {
+    return await api.kitchenBrief(await user.getIdToken())
+  } catch (e) {
+    if (e instanceof ApiClientError && e.code === 'UNAUTHORIZED') void lock()
+    throw e
+  }
+}

@@ -1,3 +1,5 @@
+import type { ParsedLine } from '../../shared/orderParse'
+import type { WeatherSim } from '../../shared/suggest'
 import type { ErrorCode, Order } from '../../shared/types'
 
 export class ApiClientError extends Error {
@@ -47,8 +49,17 @@ export type KitchenActionBody =
 
 export interface AssistResponse { source: 'ai' | 'rules'; picks: { itemId: string; reason: string }[]; note?: string }
 
+export interface ParseOrderResponse {
+  source: 'ai' | 'rules'; lines: ParsedLine[]; unmatched: string[]; needsChoices: string[]; soldOut: string[]
+}
+export interface OrderChatResponse { source: 'ai' | 'rules'; answer: string }
+export interface BriefResponse { source: 'ai' | 'rules'; text: string }
+
 export const api = {
-  assist: (query: string) => request<AssistResponse>('POST', '/api/assist', { query }),
+  assist: (query: string, simulate?: WeatherSim | null) => request<AssistResponse>('POST', '/api/assist', { query, ...(simulate && { simulate }) }),
+  parseOrder: (text: string) => request<ParseOrderResponse>('POST', '/api/parse-order', { text }),
+  orderChat: (orderId: string, question: string) => request<OrderChatResponse>('POST', '/api/order-chat', { orderId, question }),
+  kitchenBrief: (idToken: string) => request<BriefResponse>('POST', '/api/kitchen/brief', {}, idToken),
   createTemplate: (items: OrderBody['items']) => request<{ id: string }>('POST', '/api/templates', { items }),
   kitchenSession: (pin: string) => request<{ token: string }>('POST', '/api/kitchen/session', { pin }),
   kitchenAction: (idToken: string, action: KitchenActionBody) =>

@@ -13,6 +13,7 @@ import { rupees, STATUS_COPY, SUGAR_TEXT, time12, tokenLabel } from '../lib/form
 import { remainingFor, useCart, type CartLine } from './CartContext'
 import { checkLine } from './checkLine'
 import { useRecentOrders } from './RecentOrders'
+import { OrderChat } from './OrderChat'
 import { ShareButton } from './ShareButton'
 import { Notice, ReconnectingBar, TopBar } from './ui'
 
@@ -162,6 +163,7 @@ function OrderBody({ order }: { order: Order }) {
       {(order.status === 'cancelled' || order.status === 'picked_up') && (
         <Button size="lg" block onClick={orderAgain}>Order again</Button>
       )}
+      <OrderChat orderId={order.id} />
       {order.status !== 'cancelled' && <ShareButton items={order.items.map((i) => ({ itemId: i.itemId, sugar: i.sugar, qty: i.qty, ...(i.options && { options: i.options }) }))} />}
       <Link to="/orders" className="text-center text-small font-bold text-ink underline underline-offset-4">All my orders</Link>
 

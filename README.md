@@ -11,6 +11,10 @@ Order-ahead web app for a small café inside a residential society (Palm Grove R
 - **Fit picks:** a healthier section (light and high-protein) with approximate nutrition and filters.
 - **Build Your Sandwich:** Subway-style customisation (bread, fillings, extras, sauce) with live pricing, min/max rules and ingredient availability the kitchen can switch off.
 - **Ask for a pick (AI):** free-text suggestions, answered by an open-source LLM when configured and by a rule engine otherwise.
+- **Paste an order (AI):** paste a WhatsApp-style message ("2 cappuccinos, less sugar, and a veg sandwich"); it becomes cart lines to review and add.
+- **Ask about your order (AI):** on the status page, ask "how long?", "can I cancel?" and get an answer from the order's own data.
+- **Shift brief (AI, kitchen):** a "Brief me" button in the kitchen Tools drawer summarises live orders and stock into a few lines.
+- **Weather chip with demo control:** shows the live weather the menu follows, and in demo mode lets you simulate rain, heat or chill to see the picks react.
 
 ## Live
 
@@ -40,9 +44,9 @@ Open `/styleguide` for every design primitive and illustration.
 | `FIREBASE_SERVICE_ACCOUNT_BASE64` | server only | base64 of the service-account JSON. Never `VITE_`-prefixed. |
 | `KITCHEN_PIN` | server only | 4–6 digits. Compared in constant time; wrong guesses are delayed. |
 
-### AI picks: connect an open-source LLM (optional)
+### AI features: connect an open-source LLM (optional)
 
-`POST /api/assist` works with **no configuration** (a tested rule engine answers). To use a model, set three server-only env vars for any **OpenAI-compatible** chat-completions endpoint:
+All four AI features (`/api/assist`, `/api/parse-order`, `/api/order-chat`, `/api/kitchen/brief`) share these variables and each works with **no configuration** (a tested rule engine answers). To use a model, set three server-only env vars for any **OpenAI-compatible** chat-completions endpoint:
 
 | Variable | Example |
 |---|---|
@@ -72,7 +76,7 @@ The model's answer is treated as untrusted: only ids of items that are in stock 
 
 - Vite, React, TypeScript, React Router, Tailwind v4 (custom tokens only), `motion`, Zod, `date-fns` + `@date-fns/tz`.
 - **Reads** are live Firestore listeners from the browser. **Writes** go only through four Vercel functions using `firebase-admin`, so every rule runs inside a Firestore transaction on the server:
-  `POST /api/orders` · `PATCH /api/orders/[id]` · `POST /api/kitchen/session` · `POST /api/kitchen/action`
+  `POST /api/orders` · `PATCH /api/orders/[id]` · `POST /api/kitchen/session` · `POST /api/kitchen/action` (plus read-only `/api/weather`, `/api/assist`, `/api/parse-order`, `/api/order-chat`, `/api/kitchen/brief` and `/api/templates`)
 - Shared code (`/shared`): types, Zod schemas, slot math (IST), pricing, status machine, ticket timing, poster pick.
 - Business logic runs on a small `Db`/`Tx` interface, with Firestore in production and an in-memory store in unit tests.
 - Capacity is counted in prep units; stock, slot units and the daily token counter change in the same transaction as the order.

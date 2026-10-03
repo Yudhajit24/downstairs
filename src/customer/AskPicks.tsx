@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import type { WeatherSim } from '../../shared/suggest'
 import { Button } from '../design'
 import { ItemIllustration } from '../illustrations'
 import { api, ApiClientError, type AssistResponse } from '../lib/api'
@@ -14,7 +15,7 @@ const EXAMPLES = ['Something light', 'High protein, post-workout', 'Quick, I\'m 
  * The server answers with an LLM when one is configured and with a rule engine otherwise;
  * either way the picks are validated server-side and re-checked here against the live menu.
  */
-export function AskPicks() {
+export function AskPicks({ simulate }: { simulate?: WeatherSim | null }) {
   const { menu } = useCafe()
   const cart = useCart()
   const [open, setOpen] = useState(false)
@@ -28,7 +29,7 @@ export function AskPicks() {
     if (!text || busy) return
     setBusy(true); setError(''); setRes(null)
     try {
-      setRes(await api.assist(text))
+      setRes(await api.assist(text, simulate))
     } catch (e) {
       setError(
         e instanceof ApiClientError && e.code === 'RATE_LIMITED' ? e.message
