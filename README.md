@@ -77,7 +77,7 @@ The model's answer is treated as untrusted: only ids of items that are in stock 
 - Business logic runs on a small `Db`/`Tx` interface, with Firestore in production and an in-memory store in unit tests.
 - Capacity is counted in prep units; stock, slot units and the daily token counter change in the same transaction as the order.
 
-See [DECISIONS.md](DECISIONS.md) for every notable product and technical decision and why.
+See [DECISIONS.md](DECISIONS.md) for every notable product and technical decision and why, and [HANDOFF.md](HANDOFF.md) for a fresh-session briefing (state, commands, gotchas, open items).
 
 ## Security notes and known trade-offs
 
