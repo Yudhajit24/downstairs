@@ -13,6 +13,8 @@ import { rupees, STATUS_COPY, SUGAR_TEXT, time12, tokenLabel } from '../lib/form
 import { remainingFor, useCart, type CartLine } from './CartContext'
 import { checkLine } from './checkLine'
 import { useRecentOrders } from './RecentOrders'
+import { formatMinutes, minutesToPickup } from '../../shared/orderTime'
+import { BeanRating } from './BeanRating'
 import { OrderChat } from './OrderChat'
 import { Notice, ReconnectingBar, TopBar } from './ui'
 
@@ -128,6 +130,18 @@ function OrderBody({ order }: { order: Order }) {
           </p>
         )}
       </Card>
+
+      {order.status === 'picked_up' && (
+        <>
+          {minutesToPickup(order) !== null && (
+            <div className="rounded-card border-2 border-ink bg-paper-raised px-4 py-3 text-center">
+              <p className="m-0 text-small text-ink-deep/80">From ordering to pickup</p>
+              <p className="m-0 font-display text-display-m text-ink tnum">{formatMinutes(minutesToPickup(order)!)}</p>
+            </div>
+          )}
+          <BeanRating orderId={order.id} saved={order.rating} />
+        </>
+      )}
 
       {(order.status === 'new' || order.status === 'preparing') && <Poster poster={posterForOrder(new Date(), order.id)} variant="card" />}
 

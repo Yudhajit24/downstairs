@@ -109,6 +109,8 @@ export interface Order {
   statusHistory: { status: string; at: Date }[]
   createdAt: Date
   updatedAt: Date
+  /** 1 to 5 coffee beans, set by the customer once the order is picked up. */
+  rating?: number | null
 }
 
 export type ErrorCode =

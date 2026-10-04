@@ -238,3 +238,11 @@ describe('build-your-own over HTTP', () => {
     expect((await call(actionH, { auth: 'Bearer staff-token', body: { ...a, choiceId: 'nope' } })).code).toBe(404)
   })
 })
+
+describe('PATCH /api/orders/:id rate', () => {
+  it('rejects ratings outside 1 to 5 before touching the database', async () => {
+    for (const rating of [0, 6, 2.5, 'five']) {
+      expect((await call(patchH, { method: 'PATCH', query: { id: ID }, body: { action: 'rate', rating } })).code).toBe(400)
+    }
+  })
+})

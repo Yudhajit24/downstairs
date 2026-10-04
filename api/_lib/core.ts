@@ -244,6 +244,18 @@ export async function customerCancel(db: Db, id: string, now: Date): Promise<Ord
   })
 }
 
+/** A customer rates their order (1 to 5 beans) once it is picked up. Re-rating overwrites. */
+export async function rateOrder(db: Db, id: string, rating: number, now: Date): Promise<Order> {
+  return db.runTransaction(async (tx) => {
+    const order = await tx.get<Order>(`orders/${id}`)
+    if (!order) throw fail('NOT_FOUND', 'Order not found.')
+    if (order.status !== 'picked_up') throw fail('VALIDATION', 'You can rate an order once it has been picked up.', { status: order.status })
+    const patch = { rating, updatedAt: now }
+    tx.update(`orders/${id}`, patch)
+    return { ...order, ...patch }
+  })
+}
+
 // ---------- kitchen ----------
 
 export async function kitchenAction(db: Db, a: KitchenAction, now: Date): Promise<{ noop: boolean; order?: Order }> {

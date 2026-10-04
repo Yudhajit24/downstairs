@@ -67,5 +67,6 @@ export const api = {
     request<{ order: Order }>('POST', '/api/orders', { id, ...b }),
   editOrder: (id: string, b: Pick<OrderBody, 'items' | 'slotId' | 'note'>) =>
     request<{ order: Order }>('PATCH', `/api/orders/${id}`, { action: 'edit', ...b }),
+  rateOrder: (id: string, rating: number) => request<{ order: Order }>('PATCH', `/api/orders/${id}`, { action: 'rate', rating }),
   cancelOrder: (id: string) => request<{ order: Order }>('PATCH', `/api/orders/${id}`, { action: 'cancel' }),
 }

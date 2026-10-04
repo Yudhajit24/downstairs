@@ -3,7 +3,7 @@ import { DEFAULT_SETTINGS } from '../../shared/constants.js'
 import { MENU_SEED } from '../../shared/menu-seed.js'
 import type { CreateOrderInput } from '../../shared/schemas.js'
 import type { CafeSettings, MenuItem, Order, SlotDoc } from '../../shared/types.js'
-import { createOrder, customerCancel, editOrder, kitchenAction } from './core.js'
+import { createOrder, customerCancel, editOrder, kitchenAction, rateOrder } from './core.js'
 import { ApiError } from './errors.js'
 import { memoryDb } from './memory-db.js'
 
@@ -296,5 +296,27 @@ describe('kitchen actions', () => {
     expect(db.read<Order>(`orders/${oid(1)}`)!.status).toBe('new')
     expect(slotOf(db)!.usedUnits).toBe(1)
     expect((await code(createOrder(db, body(2, [chai(1)]), NOW))).code).toBe('SLOT_CLOSED')
+  })
+})
+
+describe('rate order', () => {
+  async function pickedUp(db: ReturnType<typeof world>, n: number) {
+    await createOrder(db, body(n, [poha(1)]), NOW)
+    for (const expectedStatus of ['new', 'preparing', 'ready'] as const) {
+      await kitchenAction(db, { type: 'advance', orderId: oid(n), expectedStatus }, new Date(NOW.getTime() + 60_000))
+    }
+  }
+  it('stores the rating once the order is picked up, and lets the customer change it', async () => {
+    const db = world(); await pickedUp(db, 1)
+    expect((await rateOrder(db, oid(1), 4, NOW)).rating).toBe(4)
+    await rateOrder(db, oid(1), 5, NOW)
+    expect(db.read<Order>(`orders/${oid(1)}`)!.rating).toBe(5)
+  })
+  it('refuses before pickup and for a missing order', async () => {
+    const db = world()
+    await createOrder(db, body(2, [poha(1)]), NOW)
+    expect((await code(rateOrder(db, oid(2), 5, NOW))).code).toBe('VALIDATION')
+    expect(db.read<Order>(`orders/${oid(2)}`)!.rating).toBeUndefined()
+    expect((await code(rateOrder(db, oid(9), 5, NOW))).code).toBe('NOT_FOUND')
   })
 })

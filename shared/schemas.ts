@@ -57,6 +57,7 @@ export type CreateOrderInput = z.infer<typeof createOrderSchema>
 export const customerPatchSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('edit'), items: itemsSchema, slotId: slotIdSchema, note: noteSchema }),
   z.object({ action: z.literal('cancel') }),
+  z.object({ action: z.literal('rate'), rating: z.number().int().min(1).max(5) }),
 ])
 export type CustomerPatch = z.infer<typeof customerPatchSchema>
 
