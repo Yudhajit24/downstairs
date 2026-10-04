@@ -8,7 +8,7 @@ Order-ahead for a small café inside a residential society (Palm Grove Residency
 
 ## What it does
 
-**Customer (mobile-first):** menu in categories, cart, sugar options, a build-your-own sandwich, pickup slots with real capacity, name and flat, then a live order status. Edit or cancel while the order is still New; reorder.
+**Customer (mobile-first):** menu in categories, cart, sugar options, a build-your-own sandwich, a clock-and-slider pickup time picker (any minute, with room/filling/full shown on the bar), name and flat, then a live order status. Edit or cancel while the order is still New; reorder.
 
 **Kitchen (tablet):** live board New → Preparing → Ready → Picked up with undo, cancel with reason, stock and per-ingredient switches, slot open/close, pause orders, chime and wake lock.
 
@@ -22,7 +22,7 @@ Order-ahead for a small café inside a residential society (Palm Grove Residency
 
 ## Product decisions, and why
 
-- **Capacity counts prep effort, not orders.** Each item has prep units and a slot holds 16, so four coffees and one sandwich are not the same load. Full slots show as full and offer the next free one.
+- **Capacity counts prep effort, not orders.** Each item has prep units and each 15-minute window holds 16, so four coffees and one sandwich are not the same load. Customers pick any minute; it counts against its window. A full window shows as full on the picker and offers the next free time.
 - **The server owns every rule.** Prices, stock, slot capacity and the daily token are checked and changed in one transaction, so two people cannot both take the last croissant or the last slot. Orders carry a client-made id, so a dropped connection and a retry never creates a duplicate.
 - **Edits are allowed only while an order is New.** Once the kitchen starts, changing it would waste food, so the screen says so and points to the counter. The kitchen sees a flash and a change list whenever a customer edits.
 - **AI is never trusted with anything that matters.** Code computes the facts and enforces budget, veg, stock and price. The model only chooses and phrases. Its output is checked against the real menu, and any failure falls back to a rule engine that always answers.

@@ -13,6 +13,7 @@ import { ApiClientError } from '../lib/api'
 import { useWakeLock } from '../lib/wakelock'
 import { StockDrawer, SlotsDrawer } from './Drawers'
 import { KitchenSidePanel } from './KitchenSidePanel'
+import { ratingSummary } from '../../shared/rating'
 import { KitchenTicket } from './KitchenTicket'
 import { kitchenAction, lock } from './staff'
 import { useTodayOrders } from './useTodayOrders'
@@ -74,6 +75,7 @@ export function Board() {
 
   const todayCount = orders.filter((o) => o.status !== 'cancelled').length
   const inProgress = cols.new.length + cols.preparing.length + cols.ready.length
+  const ratings = ratingSummary(orders)
 
   async function run(o: Order, kind: 'advance' | 'revert') {
     setPending((p) => new Set(p).add(o.id))
@@ -143,6 +145,11 @@ export function Board() {
         <h1 className="m-0 font-display text-display-m text-paper">DOWNSTAIRS KITCHEN</h1>
         <span className="font-mono text-body font-bold tnum">{istClock(now)} IST</span>
         <span className="text-body font-bold tnum">{todayCount} today · {inProgress} in progress</span>
+        {ratings.count > 0 && (
+          <span className="text-body font-bold tnum text-mustard" title="Average customer rating today (coffee beans out of 5)">
+            ★ {ratings.average!.toFixed(1)} <span className="font-normal text-paper/80">({ratings.count} {ratings.count === 1 ? 'rating' : 'ratings'})</span>
+          </span>
+        )}
         <span className={clsx('inline-flex items-center gap-2 rounded-full border-2 px-3 py-1 text-small font-bold', live ? 'border-paper' : 'border-mustard bg-mustard text-ink-deep')} role="status">
           <span className={clsx('size-2.5 rounded-full', live ? 'bg-leaf ring-2 ring-paper' : 'bg-tomato animate-pulse')} />
           {live ? 'Live' : 'Reconnecting'}
@@ -203,6 +210,7 @@ export function Board() {
                       <div key={o.id} className="flex items-center justify-between gap-2 rounded-btn border-2 border-fog bg-ink px-3 py-2 text-fog">
                         <span className="font-mono text-body font-bold">{tokenLabel(o.token)}</span>
                         <span className="min-w-0 flex-1 truncate text-small">{o.customer.name} · {o.customer.flat}</span>
+                        {o.rating ? <span className="font-bold text-mustard tnum" aria-label={`Rated ${o.rating} out of 5`}>★ {o.rating}</span> : null}
                         <span className="font-mono text-small">{time12(o.slotTime).replace(' ', '')}</span>
                         <button className="min-h-14 rounded-btn border-2 border-fog px-3 text-small font-bold text-paper cursor-pointer disabled:opacity-50" disabled={disabled || pending.has(o.id)} onClick={() => run(o, 'revert')}>Back</button>
                       </div>

@@ -120,3 +120,14 @@ body {
   opacity: 0.32;
   pointer-events: none;
 }
+
+/* Pickup time slider: the track is a separate availability bar, so the native track is invisible and only the thumb shows. */
+.time-range { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; height: 44px; margin: 0; cursor: pointer; touch-action: pan-y; }
+.time-range::-webkit-slider-runnable-track { height: 44px; background: transparent; }
+.time-range::-moz-range-track { height: 44px; background: transparent; }
+.time-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 30px; height: 44px; margin-top: 0; border-radius: 10px;
+  background: var(--tomato); border: 2.5px solid var(--ink); box-shadow: var(--shadow-hard-sm);
+}
+.time-range::-moz-range-thumb { width: 26px; height: 40px; border-radius: 10px; background: var(--tomato); border: 2.5px solid var(--ink); box-shadow: var(--shadow-hard-sm); }
+.time-range:disabled { opacity: .4; cursor: default; }

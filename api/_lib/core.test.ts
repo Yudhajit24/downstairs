@@ -103,10 +103,42 @@ describe('create order', () => {
     expect((await code(createOrder(db, body(3, [chai(1)]), NOW))).code).toBe('SLOT_CLOSED')
   })
 
-  it('rejects an off-grid or future-day slot as a validation error', async () => {
+  it('rejects a time outside opening hours or on a future day as a validation error', async () => {
     const db = world()
-    expect((await code(createOrder(db, body(1, [chai(1)], '2026-10-03_0807'), NOW))).code).toBe('VALIDATION')
+    expect((await code(createOrder(db, body(1, [chai(1)], '2026-10-03_0630'), NOW))).code).toBe('VALIDATION')
     expect((await code(createOrder(db, body(2, [chai(1)], '2026-10-04_0900'), NOW))).code).toBe('VALIDATION')
+  })
+
+  it('accepts any minute: stores the exact time, counts capacity on its 15-minute window', async () => {
+    const db = world()
+    const { order } = await createOrder(db, body(1, [chai(1)], '2026-10-03_0837'), NOW)
+    expect(order).toMatchObject({ slotId: '2026-10-03_0830', slotTime: '08:37' })
+    expect(order.slotStart.getTime()).toBe(new Date('2026-10-03T08:37:00+05:30').getTime())
+    expect(slotOf(db)!.usedUnits).toBe(1) // window 08:30
+    await createOrder(db, body(2, [chai(1)], '2026-10-03_0844'), NOW)
+    expect(slotOf(db)!.usedUnits).toBe(2) // same window, two different minutes
+  })
+
+  it('the lead time applies to the exact minute, not the window start', async () => {
+    const db = world()
+    expect((await code(createOrder(db, body(1, [chai(1)], '2026-10-03_0807'), NOW))).code).toBe('SLOT_PASSED') // 7 min away, lead is 10
+    const ok = await createOrder(db, body(2, [chai(1)], '2026-10-03_0812'), NOW) // window started at 08:00 but 12 min away
+    expect(ok.order.slotTime).toBe('08:12')
+    expect(ok.order.slotId).toBe('2026-10-03_0800')
+  })
+
+  it('a full window refuses every minute inside it', async () => {
+    const db = world({}, { [`slots/${SLOT}`]: { date: DATE, time: '08:30', usedUnits: 16, closed: false } })
+    expect((await code(createOrder(db, body(1, [chai(1)], '2026-10-03_0841'), NOW))).code).toBe('SLOT_FULL')
+  })
+
+  it('editing only the minute inside the same window keeps capacity and records the change', async () => {
+    const db = world()
+    await createOrder(db, body(1, [chai(1)], '2026-10-03_0835'), NOW)
+    const r = await editOrder(db, oid(1), { action: 'edit', items: [chai(1)], slotId: '2026-10-03_0842', note: null }, NOW)
+    expect(r).toMatchObject({ slotTime: '08:42', slotId: '2026-10-03_0830' })
+    expect(r.changes?.[0].label).toMatch(/08:35→08:42/)
+    expect(slotOf(db)!.usedUnits).toBe(1) // not double counted
   })
 
   it('two customers racing for the last units: exactly one wins', async () => {

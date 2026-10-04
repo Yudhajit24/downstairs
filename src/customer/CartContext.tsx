@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
 import { buildLines, lineKey, qtyByItem } from '../../shared/pricing'
+import { makeSlotId } from '../../shared/slots'
 import type { Order, Selections, Sugar } from '../../shared/types'
 import { useCafe, type MenuEntry } from '../lib/CafeData'
 import { loadCart, saveCart } from '../lib/storage'
@@ -87,7 +88,7 @@ function reducer(root: Root, a: Action): Root {
       return {
         ...root,
         edit: {
-          orderId: o.id, slotId: o.slotId, note: o.note ?? '',
+          orderId: o.id, slotId: makeSlotId(o.date, o.slotTime), note: o.note ?? '',
           lines: o.items.map((i) => ({ itemId: i.itemId, sugar: i.sugar, qty: i.qty, ...(i.options && { options: i.options }) })),
           held: Object.fromEntries(qtyByItem(o.items)),
         },

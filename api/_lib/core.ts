@@ -5,7 +5,7 @@ import {
 } from '../../shared/pricing.js'
 import {
   dateKey, daySlotTimes, formatTime12, isBookable, isCafeOpen, makeSlotId, nextBookableSlots, nextOpen,
-  parseSlotId, slotStartDate, slotState,
+  bucketIdOf, parseSlotId, slotStartDate, slotState,
 } from '../../shared/slots.js'
 import type { CreateOrderInput, CustomerPatch, KitchenAction } from '../../shared/schemas.js'
 import type { CafeSettings, MenuItem, Order, SlotDoc, Status } from '../../shared/types.js'
@@ -71,14 +71,16 @@ async function assertSlot(tx: Tx, a: {
   ownSlotId?: string; ownUnits?: number
 }) {
   const { settings, now, slotId, slot, units, ownSlotId, ownUnits = 0 } = a
+  // `slotId` is the exact pickup minute; capacity lives on its window (`bucketId`), and `slot` is that window's doc.
   const p = parseSlotId(slotId)
+  const bucketId = bucketIdOf(slotId, settings.slotMinutes)
   const times = daySlotTimes(settings)
-  if (!p || !times.includes(p.time)) throw fail('VALIDATION', 'Pick a valid pickup slot.', { fields: { slotId: 'Invalid slot' } })
+  if (!p || !times.includes(parseSlotId(bucketId)!.time)) throw fail('VALIDATION', 'Pick a valid pickup time.', { fields: { slotId: 'Invalid time' } })
   const today = dateKey(now)
-  if (p.date > today) throw fail('VALIDATION', 'You can only book slots for today.', { fields: { slotId: 'Not today' } })
+  if (p.date > today) throw fail('VALIDATION', 'You can only book pickups for today.', { fields: { slotId: 'Not today' } })
 
-  const own = slotId === ownSlotId ? ownUnits : 0
-  const state = p.date < today ? 'past' : slotState({ slotId, slot, now, settings, units, ownUnits: own })
+  const own = bucketId === ownSlotId ? ownUnits : 0
+  const state = p.date < today ? 'past' : slotState({ slotId: bucketId, slot, now, settings, units, ownUnits: own, startsAt: slotStartDate(slotId) })
   if (isBookable(state)) return
 
   const candidates = makeCandidateIds(settings, now)
@@ -87,7 +89,7 @@ async function assertSlot(tx: Tx, a: {
   const code = state === 'past' ? 'SLOT_PASSED' : state === 'closed' ? 'SLOT_CLOSED' : 'SLOT_FULL'
   const label = formatTime12(p.time)
   const msg = state === 'past' ? `${label} has passed.` : state === 'closed' ? `${label} is closed.` : `${label} just filled up.`
-  throw fail(code, msg, { slotId, nextSlots: next })
+  throw fail(code, msg, { slotId: bucketId, nextSlots: next })
 }
 
 /** Slot ids worth reading when suggesting alternatives: from now to ~4 hours ahead. */
@@ -113,7 +115,8 @@ export async function createOrder(db: Db, input: CreateOrderInput, now: Date): P
 
     const settings = await getSettings(tx)
     const menu = await getMenu(tx, input.items.map((i) => i.itemId))
-    const slot = await tx.get<SlotDoc>(`slots/${input.slotId}`)
+    const bucketId = bucketIdOf(input.slotId, settings.slotMinutes)
+    const slot = await tx.get<SlotDoc>(`slots/${bucketId}`)
     const date = dateKey(now)
     const counter = await tx.get<{ lastToken: number }>(`counters/${date}`)
 
@@ -132,7 +135,7 @@ export async function createOrder(db: Db, input: CreateOrderInput, now: Date): P
       const item = menu[itemId]
       if (item.stock !== null) tx.update(`menu/${itemId}`, { stock: item.stock - qty })
     }
-    tx.set(`slots/${input.slotId}`, slotDoc(input.slotId, slot, (slot?.usedUnits ?? 0) + built.units))
+    tx.set(`slots/${bucketId}`, slotDoc(bucketId, slot, (slot?.usedUnits ?? 0) + built.units))
     const token = (counter?.lastToken ?? 0) + 1
     tx.set(`counters/${date}`, { lastToken: token })
 
@@ -141,7 +144,7 @@ export async function createOrder(db: Db, input: CreateOrderInput, now: Date): P
       customer: input.customer,
       items: built.lines, itemCount: built.itemCount, units: built.units, total: built.total,
       note: input.note,
-      slotId: input.slotId, slotTime: parseSlotId(input.slotId)!.time, slotStart: slotStartDate(input.slotId),
+      slotId: bucketId, slotTime: parseSlotId(input.slotId)!.time, slotStart: slotStartDate(input.slotId),
       status: 'new', cancelledBy: null, cancelReason: null,
       changes: null, changesSeen: true, editCount: 0,
       statusHistory: [{ status: 'new', at: now }],
@@ -162,8 +165,10 @@ export async function editOrder(db: Db, id: string, input: EditInput, now: Date)
 
     const settings = await getSettings(tx)
     const menu = await getMenu(tx, [...input.items.map((i) => i.itemId), ...order.items.map((i) => i.itemId)])
-    const sameSlot = input.slotId === order.slotId
-    const slots = await getSlots(tx, [order.slotId, input.slotId])
+    const bucketId = bucketIdOf(input.slotId, settings.slotMinutes)
+    const sameSlot = bucketId === order.slotId
+    const slotTime = parseSlotId(input.slotId)!.time // the exact pickup minute
+    const slots = await getSlots(tx, [order.slotId, bucketId])
 
     const held = qtyByItem(order.items)
     const requested = qtyByItem(input.items)
@@ -177,14 +182,13 @@ export async function editOrder(db: Db, id: string, input: EditInput, now: Date)
 
     // An unchanged slot may already be inside the lead window; keeping it is fine unless it grows or is closed.
     const grows = built.units > order.units
-    if (!sameSlot || grows) {
+    if (!sameSlot || grows || slotTime !== order.slotTime) {
       await assertSlot(tx, {
-        settings, now, slotId: input.slotId, slot: slots[input.slotId], units: built.units,
+        settings, now, slotId: input.slotId, slot: slots[bucketId], units: built.units,
         ownSlotId: order.slotId, ownUnits: order.units,
       })
     }
 
-    const slotTime = parseSlotId(input.slotId)!.time
     const changes = diffOrder(order, { items: built.lines, slotTime, note: input.note })
     if (changes.length === 0) return order
 
@@ -199,11 +203,11 @@ export async function editOrder(db: Db, id: string, input: EditInput, now: Date)
       tx.set(`slots/${order.slotId}`, slotDoc(order.slotId, slots[order.slotId], (slots[order.slotId]?.usedUnits ?? 0) + built.units - order.units))
     } else {
       tx.set(`slots/${order.slotId}`, slotDoc(order.slotId, slots[order.slotId], (slots[order.slotId]?.usedUnits ?? 0) - order.units))
-      tx.set(`slots/${input.slotId}`, slotDoc(input.slotId, slots[input.slotId], (slots[input.slotId]?.usedUnits ?? 0) + built.units))
+      tx.set(`slots/${bucketId}`, slotDoc(bucketId, slots[bucketId], (slots[bucketId]?.usedUnits ?? 0) + built.units))
     }
     const patch = {
       items: built.lines, itemCount: built.itemCount, units: built.units, total: built.total,
-      note: input.note, slotId: input.slotId, slotTime, slotStart: slotStartDate(input.slotId),
+      note: input.note, slotId: bucketId, slotTime, slotStart: slotStartDate(input.slotId),
       changes, changesSeen: false, editCount: order.editCount + 1, updatedAt: now,
     }
     tx.update(`orders/${id}`, patch)

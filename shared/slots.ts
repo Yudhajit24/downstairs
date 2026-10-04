@@ -52,6 +52,17 @@ export function slotStartDate(slotId: string): Date {
   return new Date(new TZDate(y, mo - 1, d, h, mi, 0, 0, TIMEZONE).getTime())
 }
 
+/**
+ * Pickup times are any minute; capacity is counted per slot window (e.g. 12:45 covers 12:45 to 12:59).
+ * Maps an exact pickup id ('2026-10-03_1252') to the id of its window ('2026-10-03_1245').
+ */
+export function bucketIdOf(slotId: string, slotMinutes: number): string {
+  const p = parseSlotId(slotId)
+  if (!p) return slotId
+  const m = timeToMinutes(p.time)
+  return makeSlotId(p.date, minutesToTime(m - (m % slotMinutes)))
+}
+
 export function isCafeOpen(s: CafeSettings, now: Date): boolean {
   if (s.forceOpen) return true
   const m = minutesOfDay(now)
@@ -91,10 +102,12 @@ export function slotState(args: {
   settings: CafeSettings
   units: number
   ownUnits?: number
+  /** The exact pickup instant, when the customer picked a minute inside the window; the lead time applies to it, not to the window start. */
+  startsAt?: Date
 }): SlotState {
-  const { slotId, slot, now, settings, units, ownUnits = 0 } = args
+  const { slotId, slot, now, settings, units, ownUnits = 0, startsAt } = args
   const leadMs = settings.leadMinutes * 60_000
-  if (slotStartDate(slotId).getTime() - now.getTime() < leadMs) return 'past'
+  if ((startsAt ?? slotStartDate(slotId)).getTime() - now.getTime() < leadMs) return 'past'
   if (slot?.closed) return 'closed'
   const remaining = slotRemaining(slot, settings, ownUnits)
   if (remaining < units) return 'full'

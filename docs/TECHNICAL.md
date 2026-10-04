@@ -4,7 +4,7 @@ The full setup, scripts, environment and architecture notes. The one-page overvi
 
 Order-ahead web app for a small café inside a residential society (Palm Grove Residency, Bengaluru). Residents order from their flat, pick a pickup slot and track the order live; the kitchen runs a live board on a tablet.
 
-- **Customer view** (mobile-first): menu, cart, sugar options, pickup slots with capacity, place order, live status, edit/cancel while New, recent orders, reorder.
+- **Customer view** (mobile-first): menu, cart, sugar options, a clock-and-slider pickup time (any minute; capacity per 15-minute window), place order, live status, edit/cancel while New, recent orders, reorder.
 - **Kitchen view** (`/kitchen`, tablet landscape): PIN gate, live KOT board, status changes with undo, cancel with reason, stock and slot controls, pause new orders, chime, wake lock.
 - **Poster of the day:** a daily riso-duotone art card (public-domain busts with pop accessories).
 - **Song of the day:** a daily track in a slim bar pinned at the very top of the menu, always visible. One song for the whole society per IST day; tap it to open the card, then open the exact track on Spotify or YouTube to play it there.

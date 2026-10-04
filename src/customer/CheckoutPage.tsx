@@ -16,7 +16,7 @@ import { rupees, SUGAR_TEXT, time12 } from '../lib/format'
 import { loadProfile, saveProfile } from '../lib/storage'
 import { remainingFor, useCart, useEditCart, useNotices, useTotals, type CartApi } from './CartContext'
 import { useRecentOrders } from './RecentOrders'
-import { SlotPicker, stateOfSlot, type SlotCtx } from './SlotPicker'
+import { PickupTimePicker, stateOfSlot, type SlotCtx } from './PickupTimePicker'
 import { Dock, Notice, Spinner, TopBar } from './ui'
 
 export function CheckoutPage() {
@@ -93,7 +93,7 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
   const optionIssues = cart.state.lines.filter((l) => { const r = resolveLine(l); return r && !r.ok }).length
 
   const slotCtx: SlotCtx | null = settings
-    ? { settings, slots, now, units: totals.units, own: edit ? { slotId: edit.slotId, units: edit.units } : undefined }
+    ? { settings, slots, now, units: totals.units, own: edit ? { slotId: edit.slotId, time: edit.slotTime, units: edit.units } : undefined }
     : null
 
   // If the picked slot stops being bookable (fills up, passes, gets closed), clear it and offer the next one.
@@ -308,7 +308,7 @@ export function CheckoutView({ cart, edit }: { cart: CartApi; edit?: Order }) {
               )}
             </Notice>
           )}
-          <SlotPicker ctx={slotCtx} value={slotId} onChange={(id) => { cart.setSlot(id); setLost(null) }} />
+          <PickupTimePicker ctx={slotCtx} value={slotId} onChange={(id) => { cart.setSlot(id); setLost(null) }} />
           {attempted && !slotId && <p role="alert" className="mt-2 text-small font-bold text-tomato-text">Pick a pickup time.</p>}
         </section>
 

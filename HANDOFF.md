@@ -14,7 +14,7 @@ You are continuing work on **Downstairs**, an order-ahead web app for a small ca
 
 ## What it is
 
-**Customer view** (mobile-first, 320 to 440px): menu, cart, sugar options, build-your-own sandwich, pickup slots with capacity, place order, live status, edit/cancel while New, recent orders, reorder, a weather- and kitchen-load-aware "Right now" row, a "Fit picks" healthier section with approximate nutrition, "Ask for a pick", "Paste an order" and "Ask about your order" (AI through any OpenAI-compatible LLM, each with a rule-engine fallback), a weather chip with a demo simulate switch, poster of the day (Met Open Access CC0 busts in a riso duotone), and a song-of-the-day bar pinned at the very top of the menu.
+**Customer view** (mobile-first, 320 to 440px): menu, cart, sugar options, build-your-own sandwich, a clock-and-slider pickup time (any minute; capacity counted per 15-minute window), place order, live status, edit/cancel while New, recent orders, reorder, a weather- and kitchen-load-aware "Right now" row, a "Fit picks" healthier section with approximate nutrition, "Ask for a pick", "Paste an order" and "Ask about your order" (AI through any OpenAI-compatible LLM, each with a rule-engine fallback), a weather chip with a demo simulate switch, poster of the day (Met Open Access CC0 busts in a riso duotone), and a song-of-the-day bar pinned at the very top of the menu.
 
 **Kitchen view** (`/kitchen`, tablet): PIN gate, AI shift brief in the Tools drawer, live KOT board (New, Preparing, Ready, Picked up; tabs on narrow screens), undo toast, cancel with reason, stock and per-ingredient switches, slot open/close, 24-hour demo switch, kitchen banner, pause orders, chime, wake lock.
 
@@ -54,7 +54,7 @@ Deploy with `npx vercel deploy --prod --yes`. The Vercel CLI was logged in via t
 - `firebase-admin` must stay on **13.x**. v14 pulls an ESM-only `jose` and every function crashes on Vercel with `ERR_REQUIRE_ESM`.
 - Only function files may live directly under `api/` (Vercel turns each into a function). Tests go in `api/_lib/`.
 - Relative imports in `shared/` and `api/` use `.js` extensions (Vercel ESM). Vite, Vitest and `tsc` map them back.
-- Slots are today-only (IST), and a slot past midnight is a VALIDATION error. Order ids must be exactly 21 characters.
+- Pickup times are today-only (IST), any minute inside opening hours; `slotId` from the client is the exact minute and the server derives the capacity window (`bucketIdOf`). A time past midnight is a VALIDATION error. Order ids must be exactly 21 characters.
 - macOS `sed -i` needs `''` and silently fails on awkward patterns; prefer `python3` for multi-line edits, and verify the edit applied.
 - In the browser pane: coordinate clicks do not map, so use JS clicks or element refs. React inputs need the native value setter plus an `input` event. `requestAnimationFrame` is throttled when the pane is hidden, so animation timing cannot be measured there (screenshots force a render).
 - Time-of-day-sensitive tests have bitten twice (late-evening slot counts). `live-check` is now hour-proof; keep new checks that way.
