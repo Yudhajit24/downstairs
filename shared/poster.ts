@@ -16,6 +16,15 @@ export function posterIndex(dateKey: string, count: number): number {
   return count <= 0 ? 0 : hash(dateKey) % count
 }
 
+/**
+ * The poster on an order's status page. Never the same as the day's poster (which the menu already shows), stable for
+ * a given order so it does not flip on re-render, and different orders can get different art.
+ */
+export function orderPosterIndex(dateKey: string, orderId: string, count: number): number {
+  if (count <= 1) return 0
+  return (posterIndex(dateKey, count) + 1 + (hash(`order:${orderId}`) % (count - 1))) % count
+}
+
 /** "Good morning, Riya" (before 12) · "Afternoon, Riya" (12–5) · "Evening, Riya" (after 5). No name, no name shown. */
 export function greeting(now: Date, name?: string | null): string {
   const h = new TZDate(now.getTime(), TIMEZONE).getHours()

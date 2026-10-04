@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { greeting, posterIndex } from './poster.js'
+import { greeting, orderPosterIndex, posterIndex } from './poster.js'
 
 const at = (hhmm: string) => new Date(`2026-10-03T${hhmm}:00+05:30`)
 
@@ -37,5 +37,24 @@ describe('greeting', () => {
     expect(greeting(at('08:00'), '  Riya Sharma ')).toBe('Good morning, Riya')
     expect(greeting(at('08:00'))).toBe('Good morning')
     expect(greeting(at('08:00'), '   ')).toBe('Good morning')
+  })
+})
+
+describe('orderPosterIndex', () => {
+  it('never matches the poster of the day, is stable per order, and varies across orders', () => {
+    const seen = new Set<number>()
+    for (let d = 1; d <= 28; d++) {
+      const day = `2026-10-${String(d).padStart(2, '0')}`
+      for (const id of ['order-aaaaaaaaaaaaaaaaaa', 'order-bbbbbbbbbbbbbbbbbb', 'order-cccccccccccccccccc']) {
+        const i = orderPosterIndex(day, id, 13)
+        expect(i).not.toBe(posterIndex(day, 13))
+        expect(i).toBeGreaterThanOrEqual(0)
+        expect(i).toBeLessThan(13)
+        expect(orderPosterIndex(day, id, 13)).toBe(i)
+        seen.add(i)
+      }
+    }
+    expect(seen.size).toBeGreaterThan(5)
+    expect(orderPosterIndex('2026-10-03', 'x', 1)).toBe(0)
   })
 })

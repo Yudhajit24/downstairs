@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { useState } from 'react'
 import { dateKey } from '../../shared/slots'
-import { posterIndex } from '../../shared/poster'
+import { orderPosterIndex, posterIndex } from '../../shared/poster'
 import data from './posters.json'
 import { ACCESSORIES, type AccessoryName } from './Accessories'
 
@@ -24,6 +24,9 @@ const IMAGES = import.meta.glob('./img/*.webp', { eager: true, query: '?url', im
 const imageUrl = (file: string) => IMAGES[`./img/${file}`]
 
 export const posterOfDay = (now: Date): PosterData => POSTERS[posterIndex(dateKey(now), POSTERS.length)]
+
+/** Status-page poster: a different piece from the menu's poster of the day, fixed per order. */
+export const posterForOrder = (now: Date, orderId: string): PosterData => POSTERS[orderPosterIndex(dateKey(now), orderId, POSTERS.length)]
 
 function Accessory({ p }: { p: PosterData }) {
   const A = ACCESSORIES[p.accessory as AccessoryName]
