@@ -23,13 +23,13 @@ For the live integration I used Open-Meteo for weather. It changes the banner, t
 
 ## Decisions I'd defend
 
-Capacity is counted in prep effort, not orders. Four coffees and one sandwich aren't the same load, so each item has prep units and each 15-minute window holds 16. Customers pick any minute and it counts against its window. A full window says so and offers the next free time.
+The kitchen can't be overloaded. It can only handle so much work every 15 minutes, so when a time is full the app says so and offers the next free one. Customers still choose any minute they like.
 
 The server enforces every rule. Prices, stock, capacity and the daily token number change in one transaction, so two people can't both grab the last croissant. Each order carries an id made on the client, which means a flaky connection and a retry can't create a duplicate.
 
 You can edit an order only while it's New. Once the kitchen has started, changing it wastes food, so the screen says that and points to the counter. When someone does edit, the kitchen sees a flash and a list of what changed.
 
-I don't trust the model with anything that matters. Code works out the facts and enforces budget, veg, stock and price. The model only picks and phrases, its output is checked against the real menu, and if anything goes wrong the rule engine answers instead.
+The AI only suggests. It can't place an order or change a price, and if it breaks or gives a strange answer, the app falls back to simple rules and carries on.
 
 I cut a "group order" share button late on. All it did was copy items into someone else's cart, which promised more than it delivered, so it went.
 
@@ -37,19 +37,18 @@ Every decision and the reasoning behind it is in [DECISIONS.md](DECISIONS.md).
 
 ## What was hard
 
-Most of the effort went into the real-world cases: an item selling out mid-checkout, a slot filling while someone's picking it, edits racing the kitchen, double taps. About 230 tests cover those. Letting people choose any minute while the kitchen still plans around 15-minute windows was the trickiest rule change.
+Most of the effort went into the real-world cases: an item selling out mid-checkout, a slot filling while someone's picking it, edits racing the kitchen, double taps. About 230 tests cover those.
 
-The AI parts were fiddly in a different way. Models invent items and return broken JSON, the first hosted model I picked got retired, and the one I ended up with spent its whole token budget thinking and sent back empty answers until I capped its effort. Validation and fallbacks are why none of that reaches a customer.
+Two people reaching for the last croissant at the same moment sounds simple, but exactly one of them has to get it and the other has to be told straight away. The same goes for editing an order just as the kitchen starts it. Getting those right took more work than any single screen.
 
 One upgrade of a dependency made every serverless function crash on Vercel until I pinned it back.
 
 ## What I'd do next
 
-1. Try the kitchen on a real tablet. I've used the customer side on a phone, but the chime, vibration and wake lock have only been checked in a browser.
-2. Real customer sign-in. Right now anyone with an order link can read that order.
-3. Better rate limiting (it's in memory today) and a lockout on the PIN screen.
-4. A push notification when an order is ready, so nobody has to stare at the screen.
-5. UPI payments, plus end-to-end and accessibility tests.
+1. Real customer sign-in. Right now anyone with an order link can read that order.
+2. Better rate limiting (it's in memory today) and a lockout on the PIN screen.
+3. A push notification when an order is ready, so nobody has to stare at the screen.
+4. UPI payments, plus end-to-end and accessibility tests.
 
 ## Rough edges
 

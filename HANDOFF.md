@@ -66,7 +66,7 @@ Phase by phase with an honest summary after each: what was verified, what was no
 
 ## Known open items (the owner said "start wrapping it up")
 
-1. **Real-device test** on a phone and a tablet: chime, vibrate, wake lock (iPad needs iOS 16.4+) and scroll feel were never tested on hardware. The scroll-smoothness work (no blend modes on the grain and halftone, eased chip scrolling) is based on known causes, not measured.
+1. **Real-device test:** the owner has tried the app on a phone and on a friend's iPad. Not formally covered: long-session chime and wake lock behaviour, and scroll smoothness has not been measured (the scroll work is based on known causes).
 2. **All four AI features** were only tested against mock OpenAI-compatible servers (unit tests), never a real model. The kitchen Tools drawer (shift brief) UI was not exercised in a browser. The owner planned to supply an open-source LLM. A Vercel function cannot reach `localhost`, so production needs a hosted provider (Groq, Together, OpenRouter) or a tunnel: set the three `LLM_` variables with `vercel env add`, then redeploy.
 3. **Rate limits** are best-effort and in-memory: assist 6/min and 40/hour per IP; the kitchen PIN only has an 800 ms delay on a wrong PIN.
 4. **Content to review:** the nutrition numbers are estimates (labelled "approximate"); the 14 songs were chosen from memory (links are search URLs, so small mistakes are harmless).
