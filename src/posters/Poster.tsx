@@ -37,9 +37,9 @@ function Accessory({ p }: { p: PosterData }) {
 }
 
 /** The art itself: fixed 4:5 box (no layout shift), halftone on top, accessory positioned per poster. */
-function Art({ p, onError, failed }: { p: PosterData; onError: () => void; failed: boolean }) {
+function Art({ p, onError, failed, fill }: { p: PosterData; onError: () => void; failed: boolean; fill?: boolean }) {
   return (
-    <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink">
+    <div className={clsx('relative w-full overflow-hidden bg-ink', fill ? 'h-full' : 'aspect-[4/5]')}>
       {!failed && (
         <img src={imageUrl(p.image)} alt={p.alt} width={720} height={900} loading="lazy" decoding="async" onError={onError} className="absolute inset-0 size-full object-cover" />
       )}
@@ -61,26 +61,24 @@ type Variant = 'strip' | 'card' | 'full'
 
 export function Poster({ poster, variant = 'card', className }: { poster: PosterData; variant?: Variant; className?: string }) {
   const [failed, setFailed] = useState(false)
-  const [credit, setCredit] = useState(false)
 
   if (variant === 'strip') {
+    // The credit is always visible: people will not tap to find out what the art is. The image column stretches to the
+    // full card height, so it stays flush with the rounded border however long the text runs.
     return (
-      <button
-        type="button" onClick={() => setCredit((c) => !c)} aria-expanded={credit}
-        className={clsx('flex min-h-[88px] w-full items-stretch overflow-hidden rounded-card border-2 border-ink bg-paper-raised text-left cursor-pointer', className)}
-      >
-        <div className="aspect-[4/5] h-[88px] shrink-0 border-r-2 border-ink"><Art p={poster} failed={failed} onError={() => setFailed(true)} /></div>
+      <div className={clsx('flex min-h-[96px] w-full items-stretch overflow-hidden rounded-card border-2 border-ink bg-paper-raised text-left', className)}>
+        <div className="w-[84px] shrink-0 self-stretch border-r-2 border-ink"><Art p={poster} failed={failed} fill onError={() => setFailed(true)} /></div>
         <div className="flex min-w-0 flex-1 flex-col justify-center px-3 py-2">
           <p className="m-0 font-display text-[17px] leading-5 text-ink">{poster.line}</p>
-          {credit && <p className="m-0 mt-1 text-micro text-ink-deep/80">{creditText(poster)}</p>}
+          <p className="m-0 mt-1 text-micro text-ink-deep/80">{creditText(poster)}</p>
         </div>
-      </button>
+      </div>
     )
   }
 
   return (
     <figure className={clsx('m-0 overflow-hidden rounded-card border-2 border-ink bg-paper-raised [container-type:inline-size]', variant === 'card' && 'shadow-hard', className)}>
-      <button type="button" onClick={() => setCredit((c) => !c)} aria-expanded={credit} className="relative block w-full cursor-pointer border-0 bg-transparent p-0 text-left">
+      <div className="relative block w-full text-left">
         {failed ? (
           <div className="grid aspect-[4/5] w-full place-items-center bg-ink p-8 text-center">
             <p className="m-0 font-display leading-[1.12] text-paper [font-size:clamp(14px,7cqw,34px)]">{poster.line}</p>
@@ -93,8 +91,8 @@ export function Poster({ poster, variant = 'card', className }: { poster: Poster
             </div>
           </>
         )}
-      </button>
-      <figcaption aria-live="polite" className={clsx('px-4 text-micro text-ink-deep/80 transition-all', credit ? 'py-2' : 'h-0 overflow-hidden py-0')}>
+      </div>
+      <figcaption className="px-4 py-2 text-micro text-ink-deep/80">
         {creditText(poster)}
       </figcaption>
     </figure>

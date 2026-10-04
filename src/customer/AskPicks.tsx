@@ -3,7 +3,7 @@ import type { WeatherSim } from '../../shared/suggest'
 import { Button } from '../design'
 import { ItemIllustration } from '../illustrations'
 import { api, ApiClientError, type AssistResponse } from '../lib/api'
-import { useCafe } from '../lib/CafeData'
+import { useCafe, type MenuEntry } from '../lib/CafeData'
 import { rupees } from '../lib/format'
 import { remainingFor, useCart } from './CartContext'
 import { Spinner } from './ui'
@@ -15,7 +15,7 @@ const EXAMPLES = ['Something light', 'High protein, post-workout', 'Quick, I\'m 
  * The server answers with an LLM when one is configured and with a rule engine otherwise;
  * either way the picks are validated server-side and re-checked here against the live menu.
  */
-export function AskPicks({ simulate }: { simulate?: WeatherSim | null }) {
+export function AskPicks({ simulate, onChoose }: { simulate?: WeatherSim | null; onChoose: (m: MenuEntry) => void }) {
   const { menu } = useCafe()
   const cart = useCart()
   const [open, setOpen] = useState(false)
@@ -85,8 +85,8 @@ export function AskPicks({ simulate }: { simulate?: WeatherSim | null }) {
                       <p className="m-0 text-small text-ink-deep/80">{reason}</p>
                       <p className="m-0 text-small font-bold tnum">{rupees(item!.price)}{inCart > 0 && <span className="text-ink"> · {inCart} in cart</span>}</p>
                     </div>
-                    <Button variant="secondary" aria-label={`Add ${item!.name}`} disabled={inCart >= rem}
-                      onClick={() => cart.add(itemId, item!.hasSugarOption ? 'regular' : null, 1, Number.isFinite(rem) ? rem : undefined)}>Add</Button>
+                    <Button variant="secondary" aria-label={item!.hasSugarOption ? `Choose options for ${item!.name}` : `Add ${item!.name}`} disabled={!item!.hasSugarOption && inCart >= rem}
+                      onClick={() => (item!.hasSugarOption ? onChoose(item!) : cart.add(itemId, null, 1, Number.isFinite(rem) ? rem : undefined))}>Add</Button>
                   </li>
                 )
               })}

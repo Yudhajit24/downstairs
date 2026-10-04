@@ -10,7 +10,7 @@ export function OrderChat({ orderId }: { orderId: string }) {
   const [q, setQ] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [a, setA] = useState<{ q: string; text: string; ai: boolean } | null>(null)
+  const [a, setA] = useState<{ q: string; text: string; ai: boolean; relevant: boolean } | null>(null)
 
   async function ask(question: string) {
     const t = question.trim()
@@ -18,7 +18,7 @@ export function OrderChat({ orderId }: { orderId: string }) {
     setBusy(true); setError('')
     try {
       const r = await api.orderChat(orderId, t)
-      setA({ q: t, text: r.answer, ai: r.source === 'ai' }); setQ('')
+      setA({ q: t, text: r.answer, ai: r.source === 'ai', relevant: r.relevant }); setQ('')
     } catch (e) {
       setError(e instanceof ApiClientError && (e.code === 'RATE_LIMITED' || e.code === 'VALIDATION') ? e.message : "Couldn't answer just now.")
     } finally { setBusy(false) }
@@ -46,7 +46,7 @@ export function OrderChat({ orderId }: { orderId: string }) {
           <div className="mt-3 rounded-btn border-2 border-ink bg-paper p-3">
             <p className="m-0 text-small font-bold text-ink-deep/80">{a.q}</p>
             <p className="mb-0 mt-1 text-body">{a.text}</p>
-            <p className="mb-0 mt-1 text-micro text-ink-deep/70">{a.ai ? 'Answered by AI from your order.' : 'From your order details.'}</p>
+            {a.relevant && <p className="mb-0 mt-1 text-micro text-ink-deep/70">{a.ai ? 'Answered by AI from your order.' : 'From your order details.'}</p>}
           </div>
         )}
       </div>

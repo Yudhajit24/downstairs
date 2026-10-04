@@ -14,7 +14,7 @@ You are continuing work on **Downstairs**, an order-ahead web app for a small ca
 
 ## What it is
 
-**Customer view** (mobile-first, 320 to 440px): menu, cart, sugar options, build-your-own sandwich, pickup slots with capacity, place order, live status, edit/cancel while New, recent orders, reorder, shareable order links (`/t/:id`), a weather- and kitchen-load-aware "Right now" row, a "Fit picks" healthier section with approximate nutrition, "Ask for a pick", "Paste an order" and "Ask about your order" (AI through any OpenAI-compatible LLM, each with a rule-engine fallback), a weather chip with a demo simulate switch, poster of the day (Met Open Access CC0 busts in a riso duotone), and a song-of-the-day bar pinned at the very top of the menu.
+**Customer view** (mobile-first, 320 to 440px): menu, cart, sugar options, build-your-own sandwich, pickup slots with capacity, place order, live status, edit/cancel while New, recent orders, reorder, a weather- and kitchen-load-aware "Right now" row, a "Fit picks" healthier section with approximate nutrition, "Ask for a pick", "Paste an order" and "Ask about your order" (AI through any OpenAI-compatible LLM, each with a rule-engine fallback), a weather chip with a demo simulate switch, poster of the day (Met Open Access CC0 busts in a riso duotone), and a song-of-the-day bar pinned at the very top of the menu.
 
 **Kitchen view** (`/kitchen`, tablet): PIN gate, AI shift brief in the Tools drawer, live KOT board (New, Preparing, Ready, Picked up; tabs on narrow screens), undo toast, cancel with reason, stock and per-ingredient switches, slot open/close, 24-hour demo switch, kitchen banner, pause orders, chime, wake lock.
 
@@ -22,8 +22,8 @@ You are continuing work on **Downstairs**, an order-ahead web app for a small ca
 
 Vite + React + TypeScript, React Router, Tailwind v4 (custom tokens only; the default palette is wiped), `motion`, Zod, `date-fns` + `@date-fns/tz`, Firebase (Firestore live reads from the browser).
 
-All writes go through Vercel functions (**10 in total**, cap 12) using `firebase-admin` inside transactions (the cap is 12):
-`POST /api/orders`, `PATCH /api/orders/[id]`, `POST /api/kitchen/session`, `POST /api/kitchen/action`, `POST /api/kitchen/brief`, `POST /api/templates`, `GET /api/weather`, `POST /api/assist`, `POST /api/parse-order`, `POST /api/order-chat`.
+All writes go through Vercel functions (**9 in total**, cap 12) using `firebase-admin` inside transactions (the cap is 12):
+`POST /api/orders`, `PATCH /api/orders/[id]`, `POST /api/kitchen/session`, `POST /api/kitchen/action`, `POST /api/kitchen/brief`, `GET /api/weather`, `POST /api/assist`, `POST /api/parse-order`, `POST /api/order-chat`.
 
 - `shared/`: types, Zod schemas, slot math in IST, pricing and option resolution, status machine, ticket timing, suggestions, assist rules, nutrition, songs, poster pick. Imported by both the client and the API.
 - `api/_lib/`: core transactions on a small `Db`/`Tx` interface (Firestore in production, an in-memory store in tests), assist (LLM + validation), weather, templates, auth.
@@ -42,7 +42,7 @@ All writes go through Vercel functions (**10 in total**, cap 12) using `firebase
 | `npm run dev` | Frontend plus `/api` together (a dev-only Vite plugin; no `vercel login` needed) |
 | `npm test` | Vitest |
 | `npm run seed` | Writes the menu and `settings/cafe` |
-| `npm run reset-demo` | **Destructive:** wipes orders, slots, counters and templates, then reseeds. Dev and prod share one database. |
+| `npm run reset-demo` | **Destructive:** wipes orders, slots and counters (and any leftover template docs), then reseeds. Dev and prod share one database. |
 | `npm run live-check` | Core scenarios against real Firestore, then reseeds |
 | `npm run deploy-rules` | Publishes `firestore.rules` through the Admin SDK |
 | `npm run posters` | Rebuilds the poster images |
@@ -68,7 +68,7 @@ Phase by phase with an honest summary after each: what was verified, what was no
 
 1. **Real-device test** on a phone and a tablet: chime, vibrate, wake lock (iPad needs iOS 16.4+) and scroll feel were never tested on hardware. The scroll-smoothness work (no blend modes on the grain and halftone, eased chip scrolling) is based on known causes, not measured.
 2. **All four AI features** were only tested against mock OpenAI-compatible servers (unit tests), never a real model. The kitchen Tools drawer (shift brief) UI was not exercised in a browser. The owner planned to supply an open-source LLM. A Vercel function cannot reach `localhost`, so production needs a hosted provider (Groq, Together, OpenRouter) or a tunnel: set the three `LLM_` variables with `vercel env add`, then redeploy.
-3. **Rate limits** are best-effort and in-memory: assist 6/min and 40/hour per IP; templates have none beyond id dedupe; the kitchen PIN only has an 800 ms delay on a wrong PIN.
+3. **Rate limits** are best-effort and in-memory: assist 6/min and 40/hour per IP; the kitchen PIN only has an 800 ms delay on a wrong PIN.
 4. **Content to review:** the nutrition numbers are estimates (labelled "approximate"); the 14 songs were chosen from memory (links are search URLs, so small mistakes are harmless).
 5. The owner should **empty the Trash** (it holds the old Firebase key file) and confirm the GitHub repository's visibility.
 6. The customer bundle is about 306 KB gzipped (mostly Firestore). There are no component or end-to-end tests and no screen-reader audit; the edge-case matrix (section 11 of the original spec) was walked manually.

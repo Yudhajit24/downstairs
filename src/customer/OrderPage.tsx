@@ -14,7 +14,6 @@ import { remainingFor, useCart, type CartLine } from './CartContext'
 import { checkLine } from './checkLine'
 import { useRecentOrders } from './RecentOrders'
 import { OrderChat } from './OrderChat'
-import { ShareButton } from './ShareButton'
 import { Notice, ReconnectingBar, TopBar } from './ui'
 
 const SCENES = { new: SceneNew, preparing: ScenePreparing, ready: SceneReady, picked_up: ScenePickedUp, cancelled: SceneCancelled } as const
@@ -164,7 +163,6 @@ function OrderBody({ order }: { order: Order }) {
         <Button size="lg" block onClick={orderAgain}>Order again</Button>
       )}
       <OrderChat orderId={order.id} />
-      {order.status !== 'cancelled' && <ShareButton items={order.items.map((i) => ({ itemId: i.itemId, sugar: i.sugar, qty: i.qty, ...(i.options && { options: i.options }) }))} />}
       <Link to="/orders" className="text-center text-small font-bold text-ink underline underline-offset-4">All my orders</Link>
 
       <BottomSheet open={confirm} onClose={() => setConfirm(false)} title="Cancel this order?">

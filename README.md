@@ -8,7 +8,7 @@ Order-ahead for a small café inside a residential society (Palm Grove Residency
 
 ## What it does
 
-**Customer (mobile-first):** menu in categories, cart, sugar options, a build-your-own sandwich, pickup slots with real capacity, name and flat, then a live order status. Edit or cancel while the order is still New; reorder; share a cart as a link.
+**Customer (mobile-first):** menu in categories, cart, sugar options, a build-your-own sandwich, pickup slots with real capacity, name and flat, then a live order status. Edit or cancel while the order is still New; reorder.
 
 **Kitchen (tablet):** live board New → Preparing → Ready → Picked up with undo, cancel with reason, stock and per-ingredient switches, slot open/close, pause orders, chime and wake lock.
 

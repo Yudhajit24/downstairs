@@ -3,13 +3,14 @@ import { rightNow, type WeatherNow } from '../../shared/suggest'
 import { ItemIllustration } from '../illustrations'
 import { useCafe } from '../lib/CafeData'
 import { rupees } from '../lib/format'
+import type { MenuEntry } from '../lib/CafeData'
 import { remainingFor, useCart } from './CartContext'
 
 /**
  * "Right now": up to three picks from the weather, time of day and how full the next pickup slots are.
  * Everything here comes from data we already have (live slots) plus the cached weather endpoint.
  */
-export function RightNow({ now, weather, busy }: { now: Date; weather: WeatherNow | null; busy: boolean }) {
+export function RightNow({ now, weather, busy, onChoose }: { now: Date; weather: WeatherNow | null; busy: boolean; onChoose: (m: MenuEntry) => void }) {
   const { menuList, settings, ready } = useCafe()
   const cart = useCart()
 
@@ -38,9 +39,9 @@ export function RightNow({ now, weather, busy }: { now: Date; weather: WeatherNo
               <div className="mt-1.5 flex items-center justify-between gap-2">
                 <span className="text-small font-bold tnum">{rupees(m.price)}{inCart > 0 && <span className="text-ink"> ·{inCart}</span>}</span>
                 <button
-                  type="button" aria-label={`Add ${m.name}`} disabled={inCart >= rem}
+                  type="button" aria-label={m.hasSugarOption ? `Choose options for ${m.name}` : `Add ${m.name}`} disabled={!m.hasSugarOption && inCart >= rem}
                   className="press min-h-11 rounded-btn border-2 border-ink bg-paper-raised px-3 text-small font-bold text-ink cursor-pointer disabled:opacity-40"
-                  onClick={() => cart.add(m.id, m.hasSugarOption ? 'regular' : null, 1, Number.isFinite(rem) ? rem : undefined)}
+                  onClick={() => (m.hasSugarOption ? onChoose(m) : cart.add(m.id, null, 1, Number.isFinite(rem) ? rem : undefined))}
                 >
                   Add
                 </button>

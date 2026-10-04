@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS } from '../../shared/constants.js'
 import { MENU_SEED } from '../../shared/menu-seed.js'
 import type { CreateOrderInput } from '../../shared/schemas.js'
-import type { MenuItem, Order, TemplateDoc } from '../../shared/types.js'
+import type { MenuItem, Order } from '../../shared/types.js'
 import { createOrder, editOrder, kitchenAction } from './core.js'
 import { ApiError } from './errors.js'
 import { memoryDb } from './memory-db.js'
-import { createTemplate } from './templates.js'
 
 const NOW = new Date('2026-10-03T08:00:00+05:30')
 const SLOT = '2026-10-03_0830'
@@ -110,21 +109,3 @@ describe('edits to a build-your-own order', () => {
   })
 })
 
-describe('templates with picks', () => {
-  it('same build, same link; different build, different link; pick order is irrelevant', async () => {
-    const db = world()
-    const a = await createTemplate(db, { items: [build({ bread: ['white'], filling: ['corn-cheese', 'grilled-veg'] })] }, NOW)
-    const b = await createTemplate(db, { items: [build({ filling: ['grilled-veg', 'corn-cheese'], bread: ['white'] })] }, NOW)
-    const c = await createTemplate(db, { items: [build({ bread: ['multigrain'], filling: ['grilled-veg'] })] }, NOW)
-    expect(b.created).toBe(false)
-    expect(b.template.id).toBe(a.template.id)
-    expect(c.template.id).not.toBe(a.template.id)
-    expect(db.read<TemplateDoc>(`templates/${a.template.id}`)!.items[0].options).toEqual({ bread: ['white'], filling: ['grilled-veg', 'corn-cheese'] })
-  })
-  it('accepts an ingredient that is off right now, rejects invalid picks', async () => {
-    const db = world()
-    await kitchenAction(db, { type: 'setChoice', itemId: 'build-sandwich', groupId: 'extras', choiceId: 'olives', available: false }, NOW)
-    expect((await createTemplate(db, { items: [build({ ...good, extras: ['olives'] })] }, NOW)).created).toBe(true)
-    expect((await err(createTemplate(db, { items: [build({ filling: ['paneer-tikka'] })] }, NOW))).code).toBe('VALIDATION')
-  })
-})

@@ -92,7 +92,3 @@ export const kitchenActionSchema = z.discriminatedUnion('type', [
 ])
 export type KitchenAction = z.infer<typeof kitchenActionSchema>
 
-/** A shareable order template: just the lines (no customer, slot or note). */
-export const createTemplateSchema = z.object({ items: itemsSchema })
-export type CreateTemplateInput = z.infer<typeof createTemplateSchema>
-export const templateIdSchema = z.string().regex(/^[A-Za-z0-9_-]{8,32}$/, 'Invalid template id')

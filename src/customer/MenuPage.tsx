@@ -145,8 +145,8 @@ export function MenuPage() {
         {error && <Notice tone="tomato" role="alert">Can't reach the café right now. Showing what we have.</Notice>}
         <UsualCard />
         {open && <WeatherChip live={liveWeather} sim={demo ? sim : null} onSim={setSim} demo={demo} />}
-        {open && <RightNow now={now} weather={weather} busy={busy} />}
-        {open && <AskPicks simulate={demo ? sim : null} />}
+        {open && <RightNow now={now} weather={weather} busy={busy} onChoose={setSheetItem} />}
+        {open && <AskPicks simulate={demo ? sim : null} onChoose={setSheetItem} />}
         {open && <PasteOrder />}
       </div>
 

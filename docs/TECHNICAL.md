@@ -8,7 +8,6 @@ Order-ahead web app for a small café inside a residential society (Palm Grove R
 - **Kitchen view** (`/kitchen`, tablet landscape): PIN gate, live KOT board, status changes with undo, cancel with reason, stock and slot controls, pause new orders, chime, wake lock.
 - **Poster of the day:** a daily riso-duotone art card (public-domain busts with pop accessories).
 - **Song of the day:** a daily track in a slim bar pinned at the very top of the menu, always visible. One song for the whole society per IST day; tap it to open the card, then open the exact track on Spotify or YouTube to play it there.
-- **Shareable order templates:** share any cart or order as a `/t/<id>` link that drops the same items into a friend's cart.
 - **"Right now" suggestions:** picks from the weather (Open-Meteo), the time of day and how full the next pickup slots are. When the kitchen is busy it leads with grab-and-go bakes.
 - **Fit picks:** a healthier section (light and high-protein) with approximate nutrition and filters.
 - **Build Your Sandwich:** Subway-style customisation (bread, fillings, extras, sauce) with live pricing, min/max rules and ingredient availability the kitchen can switch off.
@@ -78,7 +77,7 @@ The model's answer is treated as untrusted: only ids of items that are in stock 
 
 - Vite, React, TypeScript, React Router, Tailwind v4 (custom tokens only), `motion`, Zod, `date-fns` + `@date-fns/tz`.
 - **Reads** are live Firestore listeners from the browser. **Writes** go only through four Vercel functions using `firebase-admin`, so every rule runs inside a Firestore transaction on the server:
-  `POST /api/orders` · `PATCH /api/orders/[id]` · `POST /api/kitchen/session` · `POST /api/kitchen/action` (plus read-only `/api/weather`, `/api/assist`, `/api/parse-order`, `/api/order-chat`, `/api/kitchen/brief` and `/api/templates`)
+  `POST /api/orders` · `PATCH /api/orders/[id]` · `POST /api/kitchen/session` · `POST /api/kitchen/action` (plus read-only `/api/weather`, `/api/assist`, `/api/parse-order`, `/api/order-chat`, `/api/kitchen/brief`)
 - Shared code (`/shared`): types, Zod schemas, slot math (IST), pricing, status machine, ticket timing, poster pick.
 - Business logic runs on a small `Db`/`Tx` interface, with Firestore in production and an in-memory store in unit tests.
 - Capacity is counted in prep units; stock, slot units and the daily token counter change in the same transaction as the order.

@@ -137,11 +137,3 @@ export interface SlotSuggestion {
   slotId: string
   time: string
 }
-
-/** templates/{id}: a shared cart. The id is a hash of the normalised lines, so the same cart always has the same link. */
-export interface TemplateDoc {
-  id: string
-  items: { itemId: string; sugar: Sugar | null; qty: number; options?: Selections }[]
-  itemCount: number
-  createdAt: Date
-}
