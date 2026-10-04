@@ -35,6 +35,11 @@ const ALIASES: Record<string, string[]> = {
   'egg-white-wrap': ['egg white wrap', 'egg wrap', 'wrap'],
   'sprouts-bowl': ['sprouts bowl', 'sprouts', 'chickpea bowl'],
   'protein-shake': ['protein shake', 'banana shake', 'shake'],
+  'chicken-sandwich': ['chicken sandwich', 'chicken grilled sandwich'],
+  'chicken-tikka-wrap': ['chicken wrap', 'tikka wrap', 'chicken tikka wrap'],
+  'chicken-keema-pav': ['keema pav', 'chicken keema', 'keema'],
+  'grilled-chicken-bowl': ['chicken bowl', 'grilled chicken'],
+  'chicken-puff': ['chicken puff', 'puff'],
 }
 
 const stem = (w: string) => (w.length > 3 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w)

@@ -158,6 +158,69 @@ export const ProteinShake = ({ size }: P) => (
   </Ill>
 )
 
+export const ChickenSandwich = ({ size }: P) => (
+  <Ill size={size} title="Chicken grilled sandwich">
+    <path d="M12 38q5-5 10 0t10 0 10 0 10 0V44H12Z" transform={RISO} {...T} />
+    <path d="M9 30Q9 14 32 14Q55 14 55 30Z" fill="var(--paper-raised)" />
+    <path d="M9 30Q9 14 32 14Q55 14 55 30Z" />
+    <path d="M21 17l4 8M31 15l4 9M41 17l4 8" strokeWidth={1.8} />
+    <path d="M9 30H55" />
+    <path d="M12 38q5-5 10 0t10 0 10 0 10 0" />
+    <path d="M9 44H55V48Q55 55 48 55H16Q9 55 9 48Z" fill="var(--paper-raised)" />
+    <path d="M9 44H55V48Q55 55 48 55H16Q9 55 9 48Z" />
+  </Ill>
+)
+
+export const ChickenTikkaWrap = ({ size }: P) => (
+  <Ill size={size} title="Chicken tikka wrap with a skewer">
+    <g transform="rotate(-32 32 34)">
+      <ellipse cx="51" cy="35" rx="5" ry="10" transform={RISO} {...T} />
+      <path d="M12 24H49A11 11 0 0 1 49 46H12A11 11 0 0 1 12 24Z" fill="var(--paper-raised)" />
+      <path d="M12 24H49A11 11 0 0 1 49 46H12A11 11 0 0 1 12 24Z" />
+      <ellipse cx="51" cy="35" rx="5" ry="10" />
+      <path d="M14 24V46M21 24V46" strokeWidth={1.8} />
+      <circle cx="43" cy="31" r="2.2" strokeWidth={1.8} /><circle cx="43" cy="39" r="2.2" strokeWidth={1.8} />
+    </g>
+    <path d="M8 56L30 50" strokeWidth={1.8} />
+    <rect x="8" y="49" width="6" height="6" rx="1.2" strokeWidth={1.8} transform="rotate(-14 11 52)" />
+  </Ill>
+)
+
+export const ChickenKeemaPav = ({ size }: P) => (
+  <Ill size={size} title="Chicken keema with pav">
+    <path d="M30 36Q30 22 44 22Q58 22 58 36Z" transform={RISO} {...T} />
+    <path d="M30 36Q30 22 44 22Q58 22 58 36" />
+    <path d="M36 28h.1M43 26h.1M50 28h.1M40 31h.1M47 31h.1M53 33h.1M37 34h.1" strokeWidth={3} />
+    <path d="M26 36H62Q62 50 44 50Q26 50 26 36Z" />
+    <rect x="4" y="30" width="19" height="22" rx="8" fill="var(--paper-raised)" />
+    <path d="M9 38h9M9 44h9" strokeWidth={1.8} />
+    <path d="M40 12q-2 3 0 5M47 11q-2 3 0 5" strokeWidth={1.8} />
+  </Ill>
+)
+
+export const ChickenPuff = ({ size }: P) => (
+  <Ill size={size} title="Chicken puff pastry">
+    <path d="M8 46Q8 20 32 16Q56 20 56 46Z" transform={RISO} {...T} />
+    <path d="M6 46Q6 18 32 14Q58 18 58 46Z" fill="var(--paper-raised)" />
+    <path d="M6 46Q6 18 32 14Q58 18 58 46Z" />
+    <path d="M6 46H58" />
+    <path d="M13 44l2.5-3 2.5 3M21 44l2.5-3 2.5 3M29 44l2.5-3 2.5 3M37 44l2.5-3 2.5 3M45 44l2.5-3 2.5 3" strokeWidth={1.6} />
+    <path d="M17 36Q32 24 47 36M21 40Q32 31 43 40" strokeWidth={1.8} />
+    <path d="M32 14V22" strokeWidth={1.8} />
+  </Ill>
+)
+
+export const GrilledChickenBowl = ({ size }: P) => (
+  <Ill size={size} title="Grilled chicken bowl with greens">
+    <path d="M17 36l4-8h22l4 8Z" transform={RISO} {...T} />
+    <path d="M8 36H56Q56 56 32 56Q8 56 8 36Z" />
+    <path d="M14 36Q12 28 20 26Q22 20 28 24Q34 18 40 24Q48 22 49 30Q54 32 50 36" fill="var(--paper-raised)" />
+    <path d="M14 36Q12 28 20 26Q22 20 28 24Q34 18 40 24Q48 22 49 30Q54 32 50 36" />
+    <path d="M19 33l9-8M27 34l9-8M35 34l9-8" strokeWidth={2.2} />
+    <circle cx="44" cy="35" r="2.6" strokeWidth={1.8} />
+  </Ill>
+)
+
 export const ITEM_ILLUSTRATIONS: Record<string, ComponentType<P>> = {
   'filter-coffee': FilterCoffee,
   'cutting-chai': CuttingChai,
@@ -174,6 +237,11 @@ export const ITEM_ILLUSTRATIONS: Record<string, ComponentType<P>> = {
   'egg-white-wrap': EggWhiteWrap,
   'sprouts-bowl': SproutsBowl,
   'protein-shake': ProteinShake,
+  'chicken-sandwich': ChickenSandwich,
+  'chicken-tikka-wrap': ChickenTikkaWrap,
+  'chicken-keema-pav': ChickenKeemaPav,
+  'chicken-puff': ChickenPuff,
+  'grilled-chicken-bowl': GrilledChickenBowl,
 }
 
 export function ItemIllustration({ name, size = 64 }: { name: string; size?: number }) {

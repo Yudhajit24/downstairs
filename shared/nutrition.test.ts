@@ -27,7 +27,7 @@ describe('fitPicks', () => {
   })
   it('protein: at least 15 g, highest first', () => {
     const r = fitPicks(menu, 'protein')
-    expect(ids(r)).toEqual(['protein-shake', 'egg-white-wrap', 'egg-bhurji-pav'])
+    expect(ids(r)).toEqual(['grilled-chicken-bowl', 'chicken-tikka-wrap', 'protein-shake', 'chicken-sandwich', 'chicken-keema-pav', 'egg-white-wrap', 'egg-bhurji-pav'])
     expect(r.every((m) => m.nutrition!.protein >= 15)).toBe(true)
   })
   it('light: at most 250 kcal, lowest first', () => {

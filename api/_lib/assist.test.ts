@@ -42,7 +42,7 @@ describe('rules path (no LLM configured)', () => {
   it('answers with source "rules"', async () => {
     const r = await assist(deps(null), 'high protein', '1.1.1.1')
     expect(r.source).toBe('rules')
-    expect(r.picks[0].itemId).toBe('protein-shake')
+    expect(r.picks[0].itemId).toBe('grilled-chicken-bowl')
   })
 })
 

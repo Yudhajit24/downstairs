@@ -50,6 +50,13 @@ describe('parseOrderText', () => {
   })
 })
 
+describe('chicken items', () => {
+  it('are recognised by their everyday names, and the longest phrase wins over plain "sandwich"', () => {
+    const r = ids('a chicken sandwich, 2 keema pav and a chicken puff, veg sandwich')
+    expect(r.lines.map((l) => [l.itemId, l.qty])).toEqual([['chicken-sandwich', 1], ['chicken-keema-pav', 2], ['chicken-puff', 1], ['veg-sandwich', 1]])
+  })
+})
+
 describe('sanitizeLines', () => {
   it('drops unknown, sold-out and choice-only items, clamps qty, fixes sugar', () => {
     const { lines, dropped } = sanitizeLines([

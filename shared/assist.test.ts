@@ -47,8 +47,8 @@ describe('eligible (hard constraints)', () => {
 describe('rulePicks', () => {
   it('protein request surfaces high-protein items first', () => {
     const r = rulePicks({ query: 'high protein for the gym', menu, now })
-    expect(ids(r)[0]).toBe('protein-shake')
-    expect(r.picks[0].reason).toMatch(/24g protein/)
+    expect(ids(r)[0]).toBe('grilled-chicken-bowl')
+    expect(r.picks[0].reason).toMatch(/30g protein/)
     expect(ids(r).every((id) => (byId(id).nutrition?.protein ?? 0) >= 15)).toBe(true)
   })
   it('respects budget and veg together', () => {
